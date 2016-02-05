@@ -282,4 +282,4 @@ $RECYCLE.BIN/
 
 # Additional
 # =========================
-Game\LaundrySquadron\Temporary\*
+**/Temporary/*
