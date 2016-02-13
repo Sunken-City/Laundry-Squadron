@@ -6,6 +6,8 @@
 #include "Engine/Math/Vector2.hpp"
 #include "Engine/Renderer/ShaderProgram.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Renderer/Material.hpp"
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <gl/GL.h>
@@ -24,20 +26,9 @@ Mesh::~Mesh()
 
 }
 
-void Mesh::RenderFromIBO(GLuint vaoID, const ShaderProgram& program) const
-{
-	glBindVertexArray(vaoID);
-	glUseProgram(program.m_shaderProgramID);
-	//Draw with IBO
-	glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (GLvoid*)0);
-	glUseProgram(NULL);
-	glBindVertexArray(NULL);
-}
-
 //-----------------------------------------------------------------------------------
 Mesh Mesh::CreateCube(float sideLength, const RGBA& color /*= RGBA::WHITE*/)
 {
-	
 	const float halfSideLength = sideLength / 2.0f;
 	Mesh meshToCreate;
 
@@ -45,7 +36,7 @@ Mesh Mesh::CreateCube(float sideLength, const RGBA& color /*= RGBA::WHITE*/)
 	//Vector3 points[] = Vector3[8];
 	for (int i = 0; i < 8; i++)
 	{
-		Vertex_PCT vert;
+		Vertex_PCUTB vert;
 		vert.pos = Vector3(((i & 0x01) == 0) ? halfSideLength : -halfSideLength,
 			((i & 0x02) == 0) ? halfSideLength : -halfSideLength,
 			((i & 0x04) == 0) ? halfSideLength : -halfSideLength);
@@ -55,6 +46,7 @@ Mesh Mesh::CreateCube(float sideLength, const RGBA& color /*= RGBA::WHITE*/)
 
 		meshToCreate.m_verts.push_back(vert);
 	}
+
 // 	for (int i = 0; i < 24; i++)
 // 	{
 // 		Vertex_PCT vert;
@@ -89,7 +81,7 @@ Mesh Mesh::CreateIcoSphere(float radius, const RGBA& color /*= RGBA::WHITE*/, in
 	Mesh meshToCreate;
 	Vector3 initialPoints[6] = { { 0, 0, radius },{ 0, 0, -radius },{ -radius, -radius, 0 },{ radius, -radius, 0 },{ radius, radius, 0 },{ -radius,  radius, 0 } };
 	Vector2 initialUVs[6] = { {0.5f, 0.5f}, {0.5f, 0.5f}, {1.0f, 1.0f}, {0.0f, 1.0f}, { 0.0f, 0.0f },{ 1.0f, 0.0f } };
-	Vertex_PCT currentWorkingVertex;
+	Vertex_PCUTB currentWorkingVertex;
 	currentWorkingVertex.color = color;
 
 	for (int i = 0; i < 6; i++)
@@ -193,10 +185,10 @@ Mesh Mesh::CreateQuad(const Vector3& bottomLeft, const Vector3& topRight, const 
 	Mesh meshToCreate;
 
 #pragma FIXME("This only works in 2D")
-	meshToCreate.m_verts.push_back(Vertex_PCT(bottomLeft, color, Vector2(0.0f, 1.0f)));
-	meshToCreate.m_verts.push_back(Vertex_PCT(Vector3(bottomLeft.x, topRight.y, topRight.z), color, Vector2(0.0f, 0.0f)));
-	meshToCreate.m_verts.push_back(Vertex_PCT(Vector3(topRight.x, bottomLeft.y, bottomLeft.z), color, Vector2(1.0f, 1.0f)));
-	meshToCreate.m_verts.push_back(Vertex_PCT(topRight, color, Vector2(1.0f, 0.0f)));
+	meshToCreate.m_verts.push_back(Vertex_PCUTB(bottomLeft, color, Vector2(0.0f, 1.0f), Vector3::UNIT_X, Vector3::UNIT_Y));
+	meshToCreate.m_verts.push_back(Vertex_PCUTB(Vector3(bottomLeft.x, topRight.y, topRight.z), color, Vector2(0.0f, 0.0f), Vector3::UNIT_X, Vector3::UNIT_Y));
+	meshToCreate.m_verts.push_back(Vertex_PCUTB(Vector3(topRight.x, bottomLeft.y, bottomLeft.z), color, Vector2(1.0f, 1.0f), Vector3::UNIT_X, Vector3::UNIT_Y));
+	meshToCreate.m_verts.push_back(Vertex_PCUTB(topRight, color, Vector2(1.0f, 0.0f), Vector3::UNIT_X, Vector3::UNIT_Y));
 
 	meshToCreate.m_indices.push_back(0);
 	meshToCreate.m_indices.push_back(1);
@@ -218,4 +210,16 @@ void Mesh::Init()
 	GL_CHECK_ERROR();
 	m_ibo = Renderer::instance->RenderBufferCreate(m_indices.data(), m_indices.size(), sizeof(unsigned int), GL_STATIC_DRAW);
 	GL_CHECK_ERROR();
+}
+
+//-----------------------------------------------------------------------------------
+void Mesh::RenderFromIBO(GLuint vaoID, const Material& material) const
+{
+	glBindVertexArray(vaoID);
+	material.SetUpRenderState();
+	//Draw with IBO
+	glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (GLvoid*)0);
+	glUseProgram(NULL);
+	glBindVertexArray(NULL);
+	material.CleanUpRenderState();
 }

@@ -29,6 +29,7 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = nullptr;
 PFNGLUSEPROGRAMPROC glUseProgram = nullptr;
 
 PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = nullptr;
+PFNGLGETACTIVEUNIFORMPROC glGetActiveUniform = nullptr;
 PFNGLUNIFORM1FVPROC glUniform1fv = nullptr;
 PFNGLUNIFORM2FVPROC	glUniform2fv = nullptr;
 PFNGLUNIFORM3FVPROC	glUniform3fv = nullptr;
@@ -77,6 +78,7 @@ void hookUpOpenGLPointers()
 	glUseProgram = (PFNGLUSEPROGRAMPROC)wglGetProcAddress("glUseProgram");
 
 	glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)wglGetProcAddress("glGetUniformLocation");
+	glGetActiveUniform = (PFNGLGETACTIVEUNIFORMPROC)wglGetProcAddress("glGetActiveUniform");
 	glUniform1fv = (PFNGLUNIFORM1FVPROC)wglGetProcAddress("glUniform1fv");
 	glUniform2fv = (PFNGLUNIFORM2FVPROC)wglGetProcAddress("glUniform2fv");
 	glUniform3fv = (PFNGLUNIFORM3FVPROC)wglGetProcAddress("glUniform3fv");

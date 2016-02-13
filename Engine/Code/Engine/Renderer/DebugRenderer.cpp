@@ -1,5 +1,5 @@
 #include "Engine/Renderer/DebugRenderer.hpp"
-#include "Engine/Renderer/TheRenderer.hpp"
+#include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Renderer/Vertex.hpp"
 #include "Engine/Math/Vector3Int.hpp"
 #include <vector>
@@ -94,16 +94,16 @@ DebugRenderer::PointCommand::PointCommand(const Vector3& position, const RGBA& c
 void DebugRenderer::PointCommand::Render() const
 {
 	bool depthTestOn = m_mode == DepthTestingMode::OFF ? false : true;
-	TheRenderer::instance->EnableDepthTest(depthTestOn);
-	TheRenderer::instance->DrawLine(m_position - Vector3::UNIT_X, m_position + Vector3::UNIT_X, m_color, 4.0f);
-	TheRenderer::instance->DrawLine(m_position - Vector3::UNIT_Y, m_position + Vector3::UNIT_Y, m_color, 4.0f);
-	TheRenderer::instance->DrawLine(m_position - Vector3::UNIT_Z, m_position + Vector3::UNIT_Z, m_color, 4.0f);
+	Renderer::instance->EnableDepthTest(depthTestOn);
+	Renderer::instance->DrawLine(m_position - Vector3::UNIT_X, m_position + Vector3::UNIT_X, m_color, 4.0f);
+	Renderer::instance->DrawLine(m_position - Vector3::UNIT_Y, m_position + Vector3::UNIT_Y, m_color, 4.0f);
+	Renderer::instance->DrawLine(m_position - Vector3::UNIT_Z, m_position + Vector3::UNIT_Z, m_color, 4.0f);
 	if (m_mode == DepthTestingMode::XRAY)
 	{
-		TheRenderer::instance->EnableDepthTest(false);
-		TheRenderer::instance->DrawLine(m_position - Vector3::UNIT_X, m_position + Vector3::UNIT_X, m_color, 1.0f);
-		TheRenderer::instance->DrawLine(m_position - Vector3::UNIT_Y, m_position + Vector3::UNIT_Y, m_color, 1.0f);
-		TheRenderer::instance->DrawLine(m_position - Vector3::UNIT_Z, m_position + Vector3::UNIT_Z, m_color, 1.0f);
+		Renderer::instance->EnableDepthTest(false);
+		Renderer::instance->DrawLine(m_position - Vector3::UNIT_X, m_position + Vector3::UNIT_X, m_color, 1.0f);
+		Renderer::instance->DrawLine(m_position - Vector3::UNIT_Y, m_position + Vector3::UNIT_Y, m_color, 1.0f);
+		Renderer::instance->DrawLine(m_position - Vector3::UNIT_Z, m_position + Vector3::UNIT_Z, m_color, 1.0f);
 	}
 }
 
@@ -121,12 +121,12 @@ DebugRenderer::LineCommand::LineCommand(const Vector3& start, const Vector3& end
 void DebugRenderer::LineCommand::Render() const
 {
 	bool depthTestOn = m_mode == DepthTestingMode::OFF ? false : true;
-	TheRenderer::instance->EnableDepthTest(depthTestOn);
-	TheRenderer::instance->DrawLine(m_start, m_end, m_color, 6.0f);
+	Renderer::instance->EnableDepthTest(depthTestOn);
+	Renderer::instance->DrawLine(m_start, m_end, m_color, 6.0f);
 	if (m_mode == DepthTestingMode::XRAY)
 	{
-		TheRenderer::instance->EnableDepthTest(false);
-		TheRenderer::instance->DrawLine(m_start, m_end, m_color, 2.0f);
+		Renderer::instance->EnableDepthTest(false);
+		Renderer::instance->DrawLine(m_start, m_end, m_color, 2.0f);
 	}
 }
 
@@ -144,14 +144,14 @@ DebugRenderer::ArrowCommand::ArrowCommand(const Vector3& start, const Vector3& e
 void DebugRenderer::ArrowCommand::Render() const
 {
 	bool depthTestOn = m_mode == DepthTestingMode::OFF ? false : true;
-	TheRenderer::instance->EnableDepthTest(depthTestOn);
-	TheRenderer::instance->DrawLine(m_start, m_end, m_color, 6.0f);
-	TheRenderer::instance->DrawPoint(m_end - Vector3::GetNormalized(m_end), m_color, 20.0f);
+	Renderer::instance->EnableDepthTest(depthTestOn);
+	Renderer::instance->DrawLine(m_start, m_end, m_color, 6.0f);
+	Renderer::instance->DrawPoint(m_end - Vector3::GetNormalized(m_end), m_color, 20.0f);
 	if (m_mode == DepthTestingMode::XRAY)
 	{
-		TheRenderer::instance->EnableDepthTest(false);
-		TheRenderer::instance->DrawLine(m_start, m_end, m_color, 2.0f);
-		TheRenderer::instance->DrawPoint(m_end - Vector3::GetNormalized(m_end), m_color, 10.0f);
+		Renderer::instance->EnableDepthTest(false);
+		Renderer::instance->DrawLine(m_start, m_end, m_color, 2.0f);
+		Renderer::instance->DrawPoint(m_end - Vector3::GetNormalized(m_end), m_color, 10.0f);
 	}
 }
 
@@ -249,36 +249,36 @@ DebugRenderer::SphereCommand::SphereCommand(const Vector3& position, float radiu
 		}
 	}
 	//Send sphere to the graphics card
-	m_vboId = TheRenderer::instance->GenerateBufferID();
+	m_vboId = Renderer::instance->GenerateBufferID();
 	m_numVerts = verts.size();
-	TheRenderer::instance->BindAndBufferVBOData(m_vboId, verts.data(), m_numVerts);
+	Renderer::instance->BindAndBufferVBOData(m_vboId, verts.data(), m_numVerts);
 }
 
 //-----------------------------------------------------------------------------------
 DebugRenderer::SphereCommand::~SphereCommand()
 {
-	TheRenderer::instance->DeleteBuffers(m_vboId);
+	Renderer::instance->DeleteBuffers(m_vboId);
 }
 
 //-----------------------------------------------------------------------------------
 void DebugRenderer::SphereCommand::Render() const
 {
-	TheRenderer::instance->PushMatrix();
+	Renderer::instance->PushMatrix();
 	{
-		TheRenderer::instance->Translate(m_position);
+		Renderer::instance->Translate(m_position);
 
 		bool depthTestOn = m_mode == DepthTestingMode::OFF ? false : true;
-		TheRenderer::instance->EnableDepthTest(depthTestOn);
-		TheRenderer::instance->SetPointSize(5.0f);
-		TheRenderer::instance->DrawVBO_PCT(m_vboId, m_numVerts, TheRenderer::DrawMode::POINTS);
+		Renderer::instance->EnableDepthTest(depthTestOn);
+		Renderer::instance->SetPointSize(5.0f);
+		Renderer::instance->DrawVBO_PCT(m_vboId, m_numVerts, Renderer::DrawMode::POINTS);
 		if (m_mode == DepthTestingMode::XRAY)
 		{
-			TheRenderer::instance->EnableDepthTest(false);
-			TheRenderer::instance->SetPointSize(2.0f);
-			TheRenderer::instance->DrawVBO_PCT(m_vboId, m_numVerts, TheRenderer::DrawMode::POINTS);
+			Renderer::instance->EnableDepthTest(false);
+			Renderer::instance->SetPointSize(2.0f);
+			Renderer::instance->DrawVBO_PCT(m_vboId, m_numVerts, Renderer::DrawMode::POINTS);
 		}
 	}
-	TheRenderer::instance->PopMatrix();
+	Renderer::instance->PopMatrix();
 }
 
 //-----------------------------------------------------------------------------------
@@ -295,17 +295,17 @@ DebugRenderer::AABB3Command::AABB3Command(const AABB3& bounds, const RGBA& strok
 void DebugRenderer::AABB3Command::Render() const
 {
 	bool depthTestOn = m_mode == DepthTestingMode::OFF ? false : true;
-	TheRenderer::instance->EnableDepthTest(depthTestOn);
-	TheRenderer::instance->SetLineWidth(7.0f);
-	TheRenderer::instance->DrawTexturedAABB3(m_bounds, m_fillColor);
-	TheRenderer::instance->DrawAABBBoundingBox(m_bounds, m_color);
+	Renderer::instance->EnableDepthTest(depthTestOn);
+	Renderer::instance->SetLineWidth(7.0f);
+	Renderer::instance->DrawTexturedAABB3(m_bounds, m_fillColor);
+	Renderer::instance->DrawAABBBoundingBox(m_bounds, m_color);
 	if (m_mode == DepthTestingMode::XRAY)
 	{
-		TheRenderer::instance->EnableDepthTest(false);
-		TheRenderer::instance->SetLineWidth(1.0f);
+		Renderer::instance->EnableDepthTest(false);
+		Renderer::instance->SetLineWidth(1.0f);
 		RGBA fadedColor = m_fillColor;
 		fadedColor.alpha = 0x80;
-		TheRenderer::instance->DrawTexturedAABB3(m_bounds, fadedColor);
-		TheRenderer::instance->DrawAABBBoundingBox(m_bounds, m_color);
+		Renderer::instance->DrawTexturedAABB3(m_bounds, fadedColor);
+		Renderer::instance->DrawAABBBoundingBox(m_bounds, m_color);
 	}
 }

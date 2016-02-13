@@ -5,7 +5,8 @@
 class Vector3Int;
 class Vector3;
 class ShaderProgram;
-struct Vertex_PCT;
+class Material;
+struct Vertex_PCUTB;
 
 class Mesh
 {
@@ -15,7 +16,7 @@ public:
 	Mesh();
 	~Mesh();
 
-	void RenderFromIBO(GLuint vaoID, const ShaderProgram& program) const;
+	void RenderFromIBO(GLuint vaoID, const Material& program) const;
 	static Mesh CreateCube(float sideLength, const RGBA& color = RGBA::WHITE);
 	static Mesh CreateIcoSphere(float radius, const RGBA& color = RGBA::WHITE, int numPasses = 3);
 	static Mesh CreateQuad(const Vector3& bottomLeft, const Vector3& topRight, const RGBA& color = RGBA::WHITE);
@@ -26,6 +27,6 @@ public:
 private:
 	void Init();
 
-	std::vector<Vertex_PCT> m_verts;
+	std::vector<Vertex_PCUTB> m_verts;
 	std::vector<unsigned int> m_indices;
 };

@@ -265,6 +265,14 @@ void Renderer::BindAndBufferVBOData(int vboID, const Vertex_PCT* vertexes, int n
 }
 
 //-----------------------------------------------------------------------------------
+void Renderer::BindAndBufferVBOData(int vboID, const Vertex_PCUTB* vertexes, int numVerts)
+{
+	glBindBuffer(GL_ARRAY_BUFFER, vboID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex_PCUTB) * numVerts, vertexes, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+//-----------------------------------------------------------------------------------
 void Renderer::DrawVertexArray(const Vertex_PCT* vertexes, int numVertexes, DrawMode drawMode /*= QUADS*/, Texture* texture /*= nullptr*/)
 {
 	if (!texture)
@@ -304,6 +312,34 @@ void Renderer::DrawVBO_PCT(unsigned int vboID, int numVerts, DrawMode drawMode /
 	glVertexPointer(3, GL_FLOAT, sizeof(Vertex_PCT), (const GLvoid*)offsetof(Vertex_PCT, pos));
 	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Vertex_PCT), (const GLvoid*)offsetof(Vertex_PCT, color));
 	glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex_PCT), (const GLvoid*)offsetof(Vertex_PCT, texCoords));
+
+	glDrawArrays(GetDrawMode(drawMode), 0, numVerts);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Renderer::DrawVBO_PCUTB(unsigned int vboID, int numVerts, DrawMode drawMode /*= QUADS*/, Texture* texture /*= nullptr*/)
+{
+	if (!texture)
+	{
+		texture = m_defaultTexture;
+	}
+	BindTexture(*texture);
+	glBindBuffer(GL_ARRAY_BUFFER, vboID);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer(3, GL_FLOAT, sizeof(Vertex_PCUTB), (const GLvoid*)offsetof(Vertex_PCUTB, pos));
+	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Vertex_PCUTB), (const GLvoid*)offsetof(Vertex_PCUTB, color));
+	glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex_PCUTB), (const GLvoid*)offsetof(Vertex_PCUTB, texCoords));
+	glVertexPointer(3, GL_FLOAT, sizeof(Vertex_PCUTB), (const GLvoid*)offsetof(Vertex_PCUTB, tangent));
+	glVertexPointer(3, GL_FLOAT, sizeof(Vertex_PCUTB), (const GLvoid*)offsetof(Vertex_PCUTB, bitangent));
 
 	glDrawArrays(GetDrawMode(drawMode), 0, numVerts);
 
@@ -419,13 +455,32 @@ unsigned char Renderer::GetDrawMode(DrawMode mode)
 }
 
 //-----------------------------------------------------------------------------------
-void Renderer::BindMeshToVAO(GLuint vao, GLuint vbo, GLuint ibo, ShaderProgram* program)
+void Renderer::BindMeshToVAOVertexPCT(GLuint vao, GLuint vbo, GLuint ibo, ShaderProgram* program)
 {
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	program->ShaderProgramBindProperty("inPosition", 3, GL_FLOAT, GL_FALSE, sizeof(Vertex_PCT), offsetof(Vertex_PCT, pos));
 	program->ShaderProgramBindProperty("inColor", 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex_PCT), offsetof(Vertex_PCT, color));
 	program->ShaderProgramBindProperty("inUV0", 2, GL_FLOAT, GL_FALSE, sizeof(Vertex_PCT), offsetof(Vertex_PCT, texCoords));
+	glBindBuffer(GL_ARRAY_BUFFER, NULL);
+	if (ibo != NULL)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	}
+	glBindVertexArray(NULL);
+}
+
+
+//-----------------------------------------------------------------------------------
+void Renderer::BindMeshToVAOVertexPCUTB(GLuint vao, GLuint vbo, GLuint ibo, ShaderProgram* program)
+{
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	program->ShaderProgramBindProperty("inPosition", 3, GL_FLOAT, GL_FALSE, sizeof(Vertex_PCUTB), offsetof(Vertex_PCUTB, pos));
+	program->ShaderProgramBindProperty("inColor", 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex_PCUTB), offsetof(Vertex_PCUTB, color));
+	program->ShaderProgramBindProperty("inUV0", 2, GL_FLOAT, GL_FALSE, sizeof(Vertex_PCUTB), offsetof(Vertex_PCUTB, texCoords));
+	program->ShaderProgramBindProperty("inTangent", 3, GL_FLOAT, GL_FALSE, sizeof(Vertex_PCUTB), offsetof(Vertex_PCUTB, tangent));
+	program->ShaderProgramBindProperty("inBitangent", 3, GL_FLOAT, GL_FALSE, sizeof(Vertex_PCUTB), offsetof(Vertex_PCUTB, bitangent));
 	glBindBuffer(GL_ARRAY_BUFFER, NULL);
 	if (ibo != NULL)
 	{
@@ -527,7 +582,6 @@ void Renderer::DrawPolygonOutline(const Vector2& center, float radius, int numSi
 		vertexes[index].pos = Vector2(x, y);
 	}
 	DrawVertexArray(vertexes, numSides, LINE_LOOP);
-
 }
 
 //-----------------------------------------------------------------------------------

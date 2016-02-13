@@ -42,6 +42,7 @@ class Face;
 class BitmapFont;
 class ShaderProgram;
 struct Vertex_PCT;
+struct Vertex_PCUTB;
 
 class Renderer
 {
@@ -76,7 +77,7 @@ public:
     void Scale(float x, float y, float z);
     unsigned char GetDrawMode(DrawMode mode);
 
-    //STATE MODIFICATION//////////////////////////////////////////////////////////////////////////
+	//STATE MODIFICATION//////////////////////////////////////////////////////////////////////////
     void EnableAdditiveBlending();
     void EnableAlphaBlending();
     void EnableInvertedBlending();
@@ -95,8 +96,10 @@ public:
     int GenerateBufferID();
     void DeleteBuffers(int vboID);
     void BindAndBufferVBOData(int vboID, const Vertex_PCT* vertexes, int numVerts);
-    void DrawVertexArray(const Vertex_PCT* vertexes, int numVertexes, DrawMode drawMode = QUADS, Texture* texture = nullptr); 
-    void DrawVBO_PCT(unsigned int vboID, int numVerts, DrawMode drawMode = QUADS, Texture* texture = nullptr);
+	void BindAndBufferVBOData(int vboID, const Vertex_PCUTB* vertexes, int numVerts);
+	void DrawVertexArray(const Vertex_PCT* vertexes, int numVertexes, DrawMode drawMode = QUADS, Texture* texture = nullptr);
+	void DrawVBO_PCT(unsigned int vboID, int numVerts, DrawMode drawMode = QUADS, Texture* texture = nullptr);
+	void DrawVBO_PCUTB(unsigned int vboID, int numVerts, DrawMode drawMode = QUADS, Texture* texture = nullptr);
 
     //DRAWING//////////////////////////////////////////////////////////////////////////
     void DrawPoint(const Vector2& point, const RGBA& color = RGBA::WHITE, float pointSize = 1.0f);
@@ -122,8 +125,9 @@ public:
                                     typedef int GLsizei;
                                     typedef unsigned int GLenum;
                                     typedef bool GLboolean;
-                                    
-                                    void BindMeshToVAO(GLuint vao, GLuint vbo, GLuint ibo, ShaderProgram* program);
+
+									void BindMeshToVAOVertexPCT(GLuint vao, GLuint vbo, GLuint ibo, ShaderProgram* program);
+                                    void BindMeshToVAOVertexPCUTB(GLuint vao, GLuint vbo, GLuint ibo, ShaderProgram* program);
                                     GLuint RenderBufferCreate(void* data, size_t count, size_t elementSize, GLenum usage/* = GL_STATIC_DRAW*/);
                                     void RenderBufferDestroy(GLuint buffer);                                    
                                     int CreateSampler(GLenum min_filter, GLenum magFilter, GLenum uWrap, GLenum vWrap);
@@ -137,7 +141,6 @@ public:
 
     //MEMBER VARIABLES//////////////////////////////////////////////////////////////////////////
     static Renderer* instance;
-private:
     BitmapFont* m_defaultFont;
     Texture* m_defaultTexture;
 };

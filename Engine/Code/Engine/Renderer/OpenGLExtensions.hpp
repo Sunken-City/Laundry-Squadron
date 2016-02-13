@@ -38,7 +38,8 @@ extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 extern PFNGLUSEPROGRAMPROC glUseProgram;
 
 extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
-extern PFNGLUNIFORM1FVPROC glUniform1fv;
+extern PFNGLGETACTIVEUNIFORMPROC glGetActiveUniform;
+extern PFNGLUNIFORM1FVPROC	glUniform1fv;
 extern PFNGLUNIFORM2FVPROC	glUniform2fv;
 extern PFNGLUNIFORM3FVPROC	glUniform3fv;
 extern PFNGLUNIFORM4FVPROC	glUniform4fv;
