@@ -771,6 +771,31 @@ int TheRenderer::CreateSampler(GLenum min_filter, //fragment counts for more tha
 	return id;
 }
 
+void TheRenderer::DrawUVSphere(Vector3 position, float radius, float numPoints)
+{
+	CHECK_RENDERER;
+	std::vector<Vertex_PCT> vertexes;
+	Vertex_PCT vertex;
+	const float halfPi = MathUtils::pi / 2.0f;
+	const float radiansPerSide = halfPi / numPoints;
+	int index = 0;
+
+	for (float phi = -halfPi; phi < halfPi; phi += radiansPerSide)
+	{
+		for (float theta = 0.0f; theta < MathUtils::twoPi; theta += radiansPerSide)
+		{
+			float x = position.x + (radius * sin(theta) * cos(phi));
+			float y = position.y + (radius * sin(theta) * sin(phi));
+			float z = position.z + (radius * cos(theta));
+
+			vertex.color = RGBA::VAPORWAVE;
+			vertex.pos = Vector3(x, y, z);
+			vertexes.push_back(vertex);
+		}
+	}
+	DrawVertexArray(vertexes.data(), vertexes.size(), LINES);
+}
+
 //-----------------------------------------------------------------------------------
 void TheRenderer::EnableFaceCulling(bool enabled)
 {

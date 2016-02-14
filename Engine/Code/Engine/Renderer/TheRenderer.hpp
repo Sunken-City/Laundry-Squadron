@@ -150,55 +150,6 @@ public:
 											};
 											memcpy(matrix->data, data, sizeof(data));
 										}
-// 										static void MatrixMakeLookAt(mat4x4* matrix, const Vector3& position, const Vector3& up, const Vector3& target)
-// 										{
-// 											Vector3 direction = target - position;
-// 											direction.Normalize();
-// 											Vector3 right = direction.Cross(up);
-// 											Vector3 localUp = right.Cross(direction);
-// 
-// 											//-right-
-// 											//-up-
-// 											//-dir-
-// 
-// 											//MatrixSetBasis(mat, right, localUp, dir);
-// 											//MatrixSetTranslation(mat, pos);
-// 
-// 											//not sure if I need this
-// 											/*const float data[16] = {
-// 												1.0f, 0.0f, 0.0f, translate.x,
-// 												0.0f, 1.0f, 0.0f, translate.y,
-// 												0.0f, 0.0f, 1.0f, translate.z,
-// 												0.0f, 0.0f, 0.0f, 1.0f
-// 											};
-// 											memcpy(matrix->data, data, sizeof(data));*/
-// 										}
-// 										static void MatrixInvertOrthogonal(mat4x4* matrix)
-// 										{
-// 											std::swap(matrix[1], matrix[4]);
-// 											std::swap(matrix[2], matrix[8]);
-// 											std::swap(matrix[6], matrix[9]);
-// 
-// 											MatrixSetTranslation(mat, Vector3(-matrix[12], -matrix[13], -matrix[14]);
-// 										}
-// 										static void MatrixMakeRotationEuler(mat4x4* matrix)
-// 										{
-// 											float sx = sin(pitch);
-// 											float cx = cos(pitch);
-// 
-// 											float sy = sin(yaw);
-// 											float cy = cos(yaw);
-// 
-// 											float sz = sin(roll);
-// 											float cz = cos(roll);
-// 
-// 											float const values[] = {
-// 												cy*cz + sx*sy*sz, cy*sz - cz*sx*sy, cx*sy, offset.x,
-// 												-cx*sz, cx*cz, sx, offset.y,
-// 												-cz*sy + cy*sx*sz, -sy*sz - cy*cz*sx, cx*cy, offset.z,
-// 												0.0f, 0.0f, 0.0f, 1.0f
-// 											};
-// 										}
 									};
 									bool ShaderProgramSetVec4(GLuint shader, const char* name, const Vector4 &v);
 									bool ShaderProgramSetMat4(GLuint shader, const char* name, const mat4x4 &v);
@@ -206,7 +157,8 @@ public:
 									void MatrixMakeProjectionOrthogonal(mat4x4* mat, float width, float height, float nz, float fz);
 									void MatrixMakePerspective(mat4x4* mat, float width, float height, float nz, float fz);
 									int CreateSampler(GLenum min_filter, GLenum magFilter, GLenum uWrap, GLenum vWrap);
-	//END TEMPORARY SECTION FOR CLASS
+									void DrawUVSphere(Vector3 position, float radius, float numLines);
+									//END TEMPORARY SECTION FOR CLASS
 							
 	//CONSTANTS//////////////////////////////////////////////////////////////////////////
 	static const int CIRCLE_SIDES = 50;

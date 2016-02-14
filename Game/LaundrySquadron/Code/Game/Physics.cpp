@@ -27,8 +27,7 @@ void Particle::Render()
 	switch ( m_renderType )
 	{
 	case PARTICLE_SPHERE:
-		//TheRenderer::instance->DrawSphere( TheRenderer::VertexGroupingRule::AS_LINES, m_state->GetPosition(), m_renderRadius, 20.f );
-		//TheRenderer::instance->DrawAABBBoundingBox(AABB3(particleMins, particleMaxs));
+		TheRenderer::instance->DrawUVSphere(m_state->GetPosition(), m_renderRadius, 20.f);
 		break;
 	case PARTICLE_AABB3:
 		Vector3 particlePos = m_state->GetPosition();
