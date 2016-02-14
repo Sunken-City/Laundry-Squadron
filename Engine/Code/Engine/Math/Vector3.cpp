@@ -43,6 +43,13 @@ Vector3::Vector3(const Vector3Int& other)
 
 }
 
+Vector3::Vector3(float initialValue)
+{
+	x = initialValue;
+	y = initialValue;
+	z = initialValue;
+}
+
 //-----------------------------------------------------------------------------------
 void Vector3::SetXYZ(float newX, float newY, float newZ)
 {

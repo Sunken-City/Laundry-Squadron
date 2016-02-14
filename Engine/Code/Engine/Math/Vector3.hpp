@@ -8,6 +8,7 @@ class Vector3
 public:
 	//CONSTRUCTORS//////////////////////////////////////////////////////////////////////////	
 	Vector3();
+	Vector3(float initialValue);
 	Vector3(float initialX, float initialY, float initialZ);
 	Vector3(const Vector3& other);
 	Vector3(const Vector3Int& other);
@@ -73,4 +74,10 @@ inline bool operator==(const Vector3& lhs, const Vector3& rhs)
 inline bool operator!=(const Vector3& lhs, const Vector3& rhs)
 {
 	return !(lhs == rhs);
+}
+
+//----------------------------------------------------------------------
+inline Vector3 operator-(const Vector3 &rhs)
+{
+	return rhs * -1.0f;
 }

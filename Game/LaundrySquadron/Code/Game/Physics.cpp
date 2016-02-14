@@ -1,11 +1,12 @@
 #include "Game/Physics.hpp"
 #include "Engine/Renderer/TheRenderer.hpp"
 #include "Engine/Math/MathUtils.hpp"
+#include "Engine/Renderer/AABB3.hpp"
 
 #define STATIC 
 
 //--------------------------------------------------------------------------------------------------------------
-STATIC const Vector3 ParticleSystem::MAX_PARTICLE_OFFSET_FROM_EMITTER = Vector3( 0.f );
+STATIC const Vector3 ParticleSystem::MAX_PARTICLE_OFFSET_FROM_EMITTER = Vector3::ZERO;
 STATIC SoundID ParticleSystem::s_emitSoundID = 0;
 
 
@@ -26,14 +27,16 @@ void Particle::Render()
 	switch ( m_renderType )
 	{
 	case PARTICLE_SPHERE:
-		TheRenderer::instance->DrawSphere( TheRenderer::VertexGroupingRule::AS_LINES, m_state->GetPosition(), m_renderRadius, 20.f );
+		//TheRenderer::instance->DrawSphere( TheRenderer::VertexGroupingRule::AS_LINES, m_state->GetPosition(), m_renderRadius, 20.f );
+		//TheRenderer::instance->DrawAABBBoundingBox(AABB3(particleMins, particleMaxs));
 		break;
 	case PARTICLE_AABB3:
 		Vector3 particlePos = m_state->GetPosition();
 		Vector3 offsetToCorners = Vector3( m_renderRadius );
 		Vector3 particleMins = particlePos - offsetToCorners;
 		Vector3 particleMaxs = particlePos + offsetToCorners;
-		g_theRenderer->DrawShadedAABB( TheRenderer::VertexGroupingRule::AS_QUADS, AABB3( particleMins, particleMaxs ), Rgba::GREEN, Rgba::WHITE, Rgba::BLACK, Rgba::RED );
+		//TheRenderer::instance->DrawShadedAABB( TheRenderer::VertexGroupingRule::AS_QUADS, AABB3( particleMins, particleMaxs ), Rgba::GREEN, Rgba::WHITE, Rgba::BLACK, Rgba::RED );
+		TheRenderer::instance->DrawAABBBoundingBox(AABB3(particleMins, particleMaxs));
 		break;
 	//FUTURE IDEAS TODO: add more render types!
 	}
@@ -150,7 +153,7 @@ Vector3 ConstantWindForce::CalcForceForStateAndMass( const LinearDynamicsState *
 //--------------------------------------------------------------------------------------------------------------
 float WormholeForce::CalcMagnitudeForState( const LinearDynamicsState * lds ) const
 {
-	return m_magnitude * lds->GetPosition().CalcLength(); //MAGIC: Further from origin you move == stronger wind.
+	return m_magnitude * lds->GetPosition().CalculateMagnitude(); //MAGIC: Further from origin you move == stronger wind.
 }
 
 
@@ -254,28 +257,28 @@ void ParticleSystem::EmitParticles( float deltaSeconds )
 		{
 			Particle* newParticle = new Particle( m_particleToEmit );
 			Vector3 newParticlePosition = m_emitterPosition; //Below offset to position allows us not to just have particles emitting outward in "bands".
-			newParticlePosition.x += MAX_PARTICLE_OFFSET_FROM_EMITTER.x * GetRandomFloatInRange( -1.f, 1.f );
-			newParticlePosition.y += MAX_PARTICLE_OFFSET_FROM_EMITTER.y * GetRandomFloatInRange( -1.f, 1.f );
-			newParticlePosition.z += MAX_PARTICLE_OFFSET_FROM_EMITTER.z * GetRandomFloatInRange( -1.f, 1.f );
+			newParticlePosition.x += MAX_PARTICLE_OFFSET_FROM_EMITTER.x * MathUtils::GetRandom(-1.f, 1.f);
+			newParticlePosition.y += MAX_PARTICLE_OFFSET_FROM_EMITTER.y * MathUtils::GetRandom(-1.f, 1.f);
+			newParticlePosition.z += MAX_PARTICLE_OFFSET_FROM_EMITTER.z * MathUtils::GetRandom(-1.f, 1.f);
 
 			Vector3 muzzleVelocity; //Below follows spherical-to-Cartesian conversion formulas.
 			float spanDegreesDownFromWorldUp = m_maxDegreesDownFromWorldUp - m_minDegreesDownFromWorldUp;
 			float spanDegreesLeftFromWorldNorth = m_maxDegreesLeftFromWorldNorth - m_minDegreesLeftFromWorldNorth;
 			muzzleVelocity.x = m_muzzleSpeed
-				* SinDegrees( ( spanDegreesDownFromWorldUp		* GetRandomFloatZeroToOne() ) + m_minDegreesDownFromWorldUp )
-				* CosDegrees( ( spanDegreesLeftFromWorldNorth	* GetRandomFloatZeroToOne() ) + m_minDegreesLeftFromWorldNorth );
+				* MathUtils::SinDegrees( ( spanDegreesDownFromWorldUp		* MathUtils::GetRandomFromZeroTo(1.0f) ) + m_minDegreesDownFromWorldUp )
+				* MathUtils::CosDegrees( ( spanDegreesLeftFromWorldNorth	* MathUtils::GetRandomFromZeroTo(1.0f)) + m_minDegreesLeftFromWorldNorth );
 			muzzleVelocity.y = m_muzzleSpeed
-				* SinDegrees( ( spanDegreesDownFromWorldUp		* GetRandomFloatZeroToOne() ) + m_minDegreesDownFromWorldUp )
-				* SinDegrees( ( spanDegreesLeftFromWorldNorth	* GetRandomFloatZeroToOne() ) + m_minDegreesLeftFromWorldNorth );
+				* MathUtils::SinDegrees( ( spanDegreesDownFromWorldUp		* MathUtils::GetRandomFromZeroTo(1.0f) ) + m_minDegreesDownFromWorldUp )
+				* MathUtils::SinDegrees( ( spanDegreesLeftFromWorldNorth	* MathUtils::GetRandomFromZeroTo(1.0f) ) + m_minDegreesLeftFromWorldNorth );
 			muzzleVelocity.z = m_muzzleSpeed
-				* CosDegrees( ( spanDegreesDownFromWorldUp		* GetRandomFloatZeroToOne() ) + m_minDegreesDownFromWorldUp ); //Embeds assumption z is world-up? Would it work if using y-up, just rotated by 90deg?
+				* MathUtils::CosDegrees( ( spanDegreesDownFromWorldUp		* MathUtils::GetRandomFromZeroTo(1.0f)) + m_minDegreesDownFromWorldUp ); //Embeds assumption z is world-up? Would it work if using y-up, just rotated by 90deg?
 
 			newParticle->SetParticleState( new LinearDynamicsState( newParticlePosition, muzzleVelocity ) );
 			newParticle->CloneForcesFromParticle( &m_particleToEmit );
 			m_unexpiredParticles.push_back( newParticle );
 		}
 
-		g_theAudio->PlaySound( s_emitSoundID );
+		AudioSystem::instance->PlaySound( s_emitSoundID );
 	}
 	else m_secondsPassedSinceLastEmit += deltaSeconds;
 }
@@ -291,8 +294,8 @@ Vector3 DebrisForce::CalcForceForStateAndMass( const LinearDynamicsState * lds, 
 //--------------------------------------------------------------------------------------------------------------
 float DebrisForce::CalcMagnitudeForState( const LinearDynamicsState * lds ) const
 {
-	float upComponentForPosition = DotProduct( lds->GetPosition(), WORLD_UP ); //This way you don't have to embed z-up or y-up assumption.
-	float upComponentForVelocity = DotProduct( lds->GetVelocity(), WORLD_UP );
+	float upComponentForPosition = MathUtils::Dot(lds->GetPosition(), Vector3::UP); //This way you don't have to embed z-up or y-up assumption.
+	float upComponentForVelocity = MathUtils::Dot(lds->GetVelocity(), Vector3::UP);
 
 	if ( upComponentForPosition < m_groundHeight )
 		upComponentForPosition *= -10.f;
@@ -306,11 +309,11 @@ float DebrisForce::CalcMagnitudeForState( const LinearDynamicsState * lds ) cons
 //--------------------------------------------------------------------------------------------------------------
 Vector3 DebrisForce::CalcDirectionForState( const LinearDynamicsState * lds ) const //The real problem: can't directly drag down velocity to zero.
 {
-	float upComponent = DotProduct( lds->GetPosition(), WORLD_UP ); //This way you don't have to embed z-up or y-up assumption.
+	float upComponent = MathUtils::Dot(lds->GetPosition(), Vector3::UP); //This way you don't have to embed z-up or y-up assumption.
 
 	//If upComponent is negative, we're below ground and need to invert direction with slightly less magnitude.
 	if ( upComponent < m_groundHeight ) 
-		return WORLD_UP;
+		return Vector3::UP;
 	else 
-		return WORLD_DOWN;
+		return -Vector3::UP;
 }
