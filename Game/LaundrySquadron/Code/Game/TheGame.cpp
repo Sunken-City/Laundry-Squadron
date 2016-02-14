@@ -10,6 +10,7 @@
 #include "Game/Camera3D.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Input/Console.hpp"
+#include "Game/Physics.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #include<Windows.h>
@@ -25,13 +26,14 @@ TheGame::TheGame()
 : m_pauseTexture(Texture::CreateOrGetTexture("Data/Images/Test.png"))
 , m_camera(new Camera3D())
 , m_twahSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/Twah.wav"))
+, m_cloth( new Cloth( Vector3::ONE, PARTICLE_AABB3, 1.f, .1f, 5, 5, 2, 1.f, 1.f, 1.f ) )
 {
 	Console::instance->RunCommand("motd");
 }
 
 TheGame::~TheGame()
 {
-
+	delete m_cloth;
 }
 float degrees = 0.f;
 
@@ -48,6 +50,8 @@ void TheGame::Update(float deltaTime)
 	}
 
 	UpdateCamera(deltaTime);
+
+	m_cloth->Update( deltaTime );
 
 	if (InputSystem::instance->IsKeyDown('G'))
 	{
@@ -114,6 +118,7 @@ void TheGame::Render() const
 	TheRenderer::instance->EnableDepthTest(true);
 	TheRenderer::instance->DrawTexturedAABB(AABB2(Vector2(0.0f, 0.0f), Vector2(300.f, 300.f)), Vector2(1.0f, 1.0f), Vector2(0.0f, 0.0f), m_pauseTexture, RGBA::WHITE);
 	RenderAxisLines();
+	m_cloth->Render(true);
 	DebugRenderer::instance->Render();
 	Console::instance->Render();
 /*	TheRenderer::instance->DoThing();*/

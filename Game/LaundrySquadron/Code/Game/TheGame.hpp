@@ -4,6 +4,7 @@
 class Texture;
 class RGBA;
 class Camera3D;
+class Cloth;
 
 class TheGame
 {
@@ -22,4 +23,5 @@ private:
 	Texture* m_pauseTexture;
 	RGBA* m_color;
 	Camera3D* m_camera;
+	Cloth* m_cloth;
 };

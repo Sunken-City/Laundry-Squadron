@@ -3,6 +3,9 @@
 #include <vector>
 #include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Audio/Audio.hpp"
+#include "Engine/Renderer/TheRenderer.hpp"
+#include "Engine/Renderer/Texture.hpp"
+#include "Engine/Renderer/AABB3.hpp"
 
 
 //-----------------------------------------------------------------------------
@@ -184,6 +187,7 @@ public:
 	void GetForces( std::vector< Force* >& out_forces ) const;
 	void AddForce( Force* newForce );
 	void CloneForcesFromParticle( const Particle* sourceParticle );
+	void DeleteState() { if ( m_state != nullptr ) delete m_state; }
 
 
 private:
@@ -256,4 +260,203 @@ private:
 
 	static const Vector3 MAX_PARTICLE_OFFSET_FROM_EMITTER;
 	static SoundID s_emitSoundID;
+};
+
+
+//-----------------------------------------------------------------------------
+enum ConstraintType {
+	STRUCTURAL, SHEAR, BEND
+};
+struct ClothConstraint
+{
+	ConstraintType type;
+	Particle* const p1;
+	Particle* const p2;
+	double restDistance; //How far apart p1, p2 are when cloth at rest.
+	ClothConstraint( ConstraintType type, Particle* const p1, Particle* const p2, double restDistance )
+		: type( type ), p1( p1 ), p2( p2 ), restDistance( restDistance ) {}
+};
+
+
+//-----------------------------------------------------------------------------
+class Cloth
+{
+
+public:
+
+	Cloth( const Vector3& originTopLeftPosition,
+		   ParticleType particleRenderType, float particleMass, float particleRadius,
+		   int numRows, int numCols,
+		   unsigned int numConstraintSolverIterations,
+		   double baseDistanceBetweenParticles,
+		   double ratioDistanceStructuralToShear,
+		   double ratioDistanceStructuralToBend,
+		   const Vector3& initialGlobalVelocity = Vector3::ZERO )
+		: m_originTopLeftPosition( originTopLeftPosition )
+		, m_numRows( numRows )
+		, m_numCols( numCols )
+		, m_numConstraintSolverIterations( numConstraintSolverIterations )
+		, m_baseDistanceBetweenParticles( baseDistanceBetweenParticles )
+		, m_ratioDistanceStructuralToShear( ratioDistanceStructuralToShear )
+		, m_ratioDistanceStructuralToBend( ratioDistanceStructuralToBend )
+	{
+		m_clothParticles.reserve( numRows * numCols );
+		for ( int i = 0; i < numRows * numCols; i++ )
+			m_clothParticles.push_back( Particle( particleRenderType, particleMass, -1.f, particleRadius ) ); //Doesn't assign a dynamics state.
+
+		AssignParticleStates( baseDistanceBetweenParticles, originTopLeftPosition.z, initialGlobalVelocity );
+
+		AddConstraints( baseDistanceBetweenParticles, ratioDistanceStructuralToShear, ratioDistanceStructuralToBend );
+	}
+
+	Particle* const GetParticle( int rowStartTop, int colStartLeft )
+	{
+		if ( rowStartTop > m_numRows )
+			return nullptr;
+		if ( colStartLeft > m_numCols )
+			return nullptr;
+
+		return &m_clothParticles[ ( rowStartTop * m_numRows ) + colStartLeft ]; //Row-major.
+	}
+	void Update( float deltaSeconds )
+	{
+		for ( int particleIndex = 0; particleIndex < m_numRows * m_numCols; particleIndex++ )
+			m_clothParticles[ particleIndex ].StepAndAge( deltaSeconds );
+
+		SatisfyConstraints();
+	}
+	void Render( bool showParticles = false )
+	{
+		//Render the cloth "fabric" by taking every 4 particle positions (r,c) to (r+1,c+1) in to make a quad.
+		LinearDynamicsState particleStateTopLeft; //as 0,0 is top left. 
+		LinearDynamicsState particleStateBottomRight;
+
+		for ( int r = 0; ( r + 1 ) < m_numRows; r++ )
+		{
+			for ( int c = 0; ( c + 1 ) < m_numCols; c++ )
+			{
+				GetParticle( r, c )->GetParticleState( particleStateTopLeft );
+				GetParticle( r + 1, c + 1 )->GetParticleState( particleStateBottomRight );
+				AABB3 bounds( particleStateTopLeft.GetPosition(), particleStateBottomRight.GetPosition() );
+
+				TheRenderer::instance->DrawTexturedAABB3( bounds, RGBA::WHITE, Vector2::ZERO, Vector2::ONE, Texture::CreateOrGetTexture("Data/Images/Test.png") );
+			}
+		}
+
+		if ( !showParticles )
+			return;
+
+		for ( int particleIndex = 0; particleIndex < m_numRows * m_numCols; particleIndex++ )
+			m_clothParticles[ particleIndex ].Render();
+	}
+
+
+private:
+
+	void AssignParticleStates( float baseDistance, float nonPlanarDepth, const Vector3& velocity = Vector3::ZERO ) //Note: 0,0 == top-left, so +x is right, +y is down.
+	{
+		for ( int r = 0; r < m_numRows; r++ )
+		{
+			for ( int c = 0; c < m_numCols; c++ )
+			{
+				Vector3 startPosition( r * baseDistance, c * baseDistance, nonPlanarDepth );
+				GetParticle( r, c )->SetParticleState( new LinearDynamicsState( startPosition, velocity ) );
+			}
+		}
+	}
+
+	void UpdateConstraints( ConstraintType affectedType, double newRestDistance )
+	{
+		for ( unsigned int constraintIndex = 0; constraintIndex < m_clothConstraints.size(); constraintIndex++ )
+			if ( m_clothConstraints[ constraintIndex ].type == affectedType )
+				m_clothConstraints[ constraintIndex ].restDistance = newRestDistance;
+	}
+	void AddConstraints( double baseDistance, double ratioStructuralToShear, double ratioStructuralToBend )
+	{
+		double shearDist = baseDistance * ratioStructuralToShear;
+		double bendDist = baseDistance * ratioStructuralToBend;
+
+		for ( int r = 0; r < m_numRows; r++ )
+		{
+			for ( int c = 0; c < m_numCols; c++ )
+			{
+				if ( r + 1 < m_numRows )
+					m_clothConstraints.push_back( ClothConstraint( STRUCTURAL, GetParticle( r, c ), GetParticle( r + 1, c ), baseDistance ) );
+				if ( ( r - 1 ) > 0 )
+					m_clothConstraints.push_back( ClothConstraint( STRUCTURAL, GetParticle( r, c ), GetParticle( r - 1, c ), baseDistance ) );
+				if ( ( c + 1 ) < m_numCols )
+					m_clothConstraints.push_back( ClothConstraint( STRUCTURAL, GetParticle( r, c ), GetParticle( r, c + 1 ), baseDistance ) );
+				if ( ( c - 1 ) > 0 )
+					m_clothConstraints.push_back( ClothConstraint( STRUCTURAL, GetParticle( r, c ), GetParticle( r, c - 1 ), baseDistance ) );
+
+				if ( ( r + 1 ) < m_numRows && ( c + 1 ) < m_numCols )
+					m_clothConstraints.push_back( ClothConstraint( SHEAR, GetParticle( r, c ), GetParticle( r + 1, c + 1 ), shearDist ) );
+				if ( ( r - 1 ) > 0 && ( c + 1 ) < m_numCols )
+					m_clothConstraints.push_back( ClothConstraint( SHEAR, GetParticle( r, c ), GetParticle( r - 1, c + 1 ), shearDist ) );
+				if ( ( r + 1 ) < m_numRows && ( c - 1 ) > 0 )
+					m_clothConstraints.push_back( ClothConstraint( SHEAR, GetParticle( r, c ), GetParticle( r + 1, c - 1 ), shearDist ) );
+				if ( ( r - 1 ) > 0 && ( c - 1 ) > 0 )
+					m_clothConstraints.push_back( ClothConstraint( SHEAR, GetParticle( r, c ), GetParticle( r - 1, c - 1 ), shearDist ) );
+
+				if ( ( r + 1 ) < m_numRows && ( c + 1 ) < m_numCols )
+					m_clothConstraints.push_back( ClothConstraint( SHEAR, GetParticle( r, c ), GetParticle( r + 1, c + 1 ), bendDist ) );
+				if ( ( r - 1 ) > 0 && ( c + 1 ) < m_numCols )
+					m_clothConstraints.push_back( ClothConstraint( SHEAR, GetParticle( r, c ), GetParticle( r - 1, c + 1 ), bendDist ) );
+				if ( ( r + 1 ) < m_numRows && ( c - 1 ) > 0 )
+					m_clothConstraints.push_back( ClothConstraint( SHEAR, GetParticle( r, c ), GetParticle( r + 1, c - 1 ), bendDist ) );
+				if ( ( r - 1 ) > 0 && ( c - 1 ) > 0 )
+					m_clothConstraints.push_back( ClothConstraint( SHEAR, GetParticle( r, c ), GetParticle( r - 1, c - 1 ), bendDist ) );
+			}
+		}
+	}
+	void SatisfyConstraints()
+	{
+		for ( unsigned int numIteration = 0; numIteration < m_numConstraintSolverIterations; ++numIteration )
+		{
+			for ( unsigned int constraintIndex = 0; constraintIndex < m_clothConstraints.size(); constraintIndex++ )
+			{
+				ClothConstraint currentConstraint = m_clothConstraints[ constraintIndex ];
+
+				LinearDynamicsState particleState2;
+				LinearDynamicsState particleState1;
+
+				currentConstraint.p1->GetParticleState( particleState1 );
+				currentConstraint.p2->GetParticleState( particleState2 );
+
+				Vector3 particlePosition1 = particleState1.GetPosition();
+				Vector3 particlePosition2 = particleState2.GetPosition();
+				Vector3 currentDisplacement = particlePosition2 - particlePosition1;
+
+				if ( currentDisplacement == Vector3::ZERO )
+					continue; //Skip solving for a step.
+				double currentDistance = currentDisplacement.CalculateMagnitude();
+
+				Vector3 halfCorrectionVector = currentDisplacement * 0.5 * ( 1.0 - ( currentConstraint.restDistance / currentDistance ) );
+				// Note last term is ( currDist - currConstraint.restDist ) / currDist, just divided through.
+
+				//Move p2 towards p1 (- along halfVec), p1 towards p2 (+ along halfVec).
+				particleState1.SetPosition( particlePosition1 + halfCorrectionVector );
+				particleState2.SetPosition( particlePosition2 - halfCorrectionVector );
+
+				//Note: particles delete their own dynamics state's memory, but we have to clean up what we're replacing.
+				currentConstraint.p1->DeleteState();
+				currentConstraint.p2->DeleteState();
+				currentConstraint.p1->SetParticleState( new LinearDynamicsState( particleState1 ) );
+				currentConstraint.p2->SetParticleState( new LinearDynamicsState( particleState2 ) );
+			}
+		}
+	}
+
+	Vector3 m_originTopLeftPosition; //m_clothParticles[0,0].position.
+	int m_numRows;
+	int m_numCols;
+	unsigned int m_numConstraintSolverIterations;
+
+	//Ratios stored with class mostly for debugging. Or maybe use > these to tell when break a cloth constraint?
+	double m_baseDistanceBetweenParticles;
+	double m_ratioDistanceStructuralToShear;
+	double m_ratioDistanceStructuralToBend;
+
+	std::vector< Particle > m_clothParticles; //A 1D array, use GetParticle for 2D row-col interfacing accesses. Vector in case we want to push more at runtime.
+	std::vector< ClothConstraint > m_clothConstraints; //TODO: make c-style after getting fixed-size formula given cloth dims?
 };
