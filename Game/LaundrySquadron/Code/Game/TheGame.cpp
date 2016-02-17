@@ -19,14 +19,15 @@ TheGame* TheGame::instance = nullptr;
 
 CONSOLE_COMMAND(twah)
 {
+	UNUSED( args );
 	AudioSystem::instance->PlaySound(TheGame::instance->m_twahSFX);
 }
 
 TheGame::TheGame()
 : m_pauseTexture(Texture::CreateOrGetTexture("Data/Images/Test.png"))
 , m_camera(new Camera3D())
-, m_twahSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/Twah.wav"))
-, m_cloth( new Cloth( Vector3::ONE, PARTICLE_AABB3, 1.f, .1f, 5, 5, 2, 1.f, 1.f, 1.f ) )
+, m_twahSFX( AudioSystem::instance->CreateOrGetSound( "Data/SFX/Twah.wav" ) )
+, m_cloth( new Cloth( Vector3(0,0,5), PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt( 2.f ), 2.f ) )
 {
 	Console::instance->RunCommand("motd");
 }
@@ -118,7 +119,7 @@ void TheGame::Render() const
 	TheRenderer::instance->EnableDepthTest(true);
 	TheRenderer::instance->DrawTexturedAABB(AABB2(Vector2(0.0f, 0.0f), Vector2(300.f, 300.f)), Vector2(1.0f, 1.0f), Vector2(0.0f, 0.0f), m_pauseTexture, RGBA::WHITE);
 	RenderAxisLines();
-	m_cloth->Render(true);
+	m_cloth->Render(true, true, true);
 	DebugRenderer::instance->Render();
 	Console::instance->Render();
 /*	TheRenderer::instance->DoThing();*/

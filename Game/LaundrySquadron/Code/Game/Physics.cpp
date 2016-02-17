@@ -45,7 +45,8 @@ void Particle::Render()
 //--------------------------------------------------------------------------------------------------------------
 void Particle::StepAndAge( float deltaSeconds )
 {
-	m_state->StepWithForwardEuler( m_mass, deltaSeconds ); 
+//	m_state->StepWithForwardEuler( m_mass, deltaSeconds );
+	m_state->StepWithVerlet( m_mass, deltaSeconds );
 	m_secondsToLive -= deltaSeconds;
 }
 
@@ -78,6 +79,60 @@ void Particle::CloneForcesFromParticle( const Particle * sourceParticle )
 		m_state->AddForce( sourceParticleForces[ forceIndex ]->GetCopy() );
 }
 
+//--------------------------------------------------------------------------------------------------------------
+bool Particle::GetPosition( Vector3& out_position )
+{
+	if ( m_state == nullptr )
+		return false;
+
+	out_position = m_state->GetPosition();
+	return true;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+bool Particle::SetPosition( const Vector3& newPosition )
+{
+	if ( m_state == nullptr )
+		return false;
+
+	m_state->SetPosition( newPosition );
+	return true;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+bool Particle::Translate( const Vector3& translation )
+{
+	if ( m_state == nullptr )
+		return false;
+
+	m_state->SetPosition( m_state->GetPosition() + translation );
+	return true;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+bool Particle::GetVelocity( Vector3& out_position )
+{
+	if ( m_state == nullptr )
+		return false;
+
+	out_position = m_state->GetVelocity();
+	return true;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+bool Particle::SetVelocity( const Vector3& newVelocity )
+{
+	if ( m_state == nullptr )
+		return false;
+
+	m_state->SetVelocity( newVelocity );
+	return true;
+}
+
 
 //--------------------------------------------------------------------------------------------------------------
 LinearDynamicsState::~LinearDynamicsState()
@@ -104,6 +159,18 @@ void LinearDynamicsState::StepWithForwardEuler( float mass, float deltaSeconds )
 
 	m_position += dState.m_position * deltaSeconds; //x := x + (veloc * dt)
 	m_velocity += dState.m_velocity * deltaSeconds; //v := v + (accel * dt)
+}
+
+void LinearDynamicsState::StepWithVerlet( float mass, float deltaSeconds )
+{
+	//https://en.wikipedia.org/wiki/Verlet_integration#Velocity_Verlet - to do away with the x_(t-1) at t=0 problem.
+	static Vector3 prevAccel = 0.f;
+
+	LinearDynamicsState dState = dStateForMass( mass );
+
+	m_position += ( m_velocity*deltaSeconds ) + ( dState.m_velocity*.5f*deltaSeconds*deltaSeconds ); //x := x + v*dt + .5*a*dt*dt.
+	m_velocity += ( prevAccel + dState.m_velocity )*.5f*deltaSeconds; //v := v + .5*(a + a_next)*dt.
+	prevAccel = dState.m_velocity;
 }
 
 
@@ -140,7 +207,7 @@ Vector3 GravityForce::CalcForceForStateAndMass( const LinearDynamicsState * lds,
 
 
 //--------------------------------------------------------------------------------------------------------------
-Vector3 ConstantWindForce::CalcForceForStateAndMass( const LinearDynamicsState * lds, float mass ) const
+Vector3 ConstantWindForce::CalcForceForStateAndMass( const LinearDynamicsState * lds, float /*mass*/ ) const
 {
 	Vector3 windVector = CalcDirectionForState( lds ) * CalcMagnitudeForState( lds );
 	Vector3 undampedWindForce = lds->GetVelocity() - windVector;
@@ -164,7 +231,7 @@ Vector3 WormholeForce::CalcDirectionForState( const LinearDynamicsState * lds ) 
 
 
 //--------------------------------------------------------------------------------------------------------------
-Vector3 WormholeForce::CalcForceForStateAndMass( const LinearDynamicsState* lds, float mass ) const
+Vector3 WormholeForce::CalcForceForStateAndMass( const LinearDynamicsState* lds, float /*mass*/ ) const
 {
 	Vector3 windVector = CalcDirectionForState( lds ) * CalcMagnitudeForState( lds );
 	Vector3 undampedWindForce = lds->GetVelocity() - windVector;
@@ -174,7 +241,7 @@ Vector3 WormholeForce::CalcForceForStateAndMass( const LinearDynamicsState* lds,
 
 
 //--------------------------------------------------------------------------------------------------------------
-Vector3 SpringForce::CalcForceForStateAndMass( const LinearDynamicsState * lds, float mass ) const
+Vector3 SpringForce::CalcForceForStateAndMass( const LinearDynamicsState * lds, float /*mass*/ ) const
 {
 	Vector3 dampedVelocity = lds->GetVelocity() * -m_dampedness;
 	Vector3 stiffenedPosition = lds->GetPosition() * -m_stiffness;
