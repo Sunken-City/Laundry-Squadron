@@ -19,9 +19,9 @@ public:
 	static TheGame* instance;
 
 	SoundID m_twahSFX;
+	Cloth* m_cloth;
 private:
-	Texture* m_pauseTexture;
+	Texture* m_marthTexture;
 	RGBA* m_color;
 	Camera3D* m_camera;
-	Cloth* m_cloth;
 };
