@@ -67,7 +67,7 @@ void TheGame::Update(float deltaTime)
 
 	if (InputSystem::instance->IsKeyDown('G'))
 	{
-		DebugRenderer::instance->DrawDebugSphere(Vector3(50.0f, 0.0f, 100.0f), 20.0f, RGBA::CYAN, 0.0f, DebugRenderer::DepthTestingMode::XRAY);
+		m_cloth->MoveClothByOffset(Vector3::UNIT_Z);
 	}
 }
 

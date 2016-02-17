@@ -288,9 +288,8 @@ struct ClothConstraint
 //-----------------------------------------------------------------------------
 class Cloth
 {
-
 public:
-
+	//CONTRUCTORS//////////////////////////////////////////////////////////////////////////
 	Cloth( const Vector3& originTopLeftPosition,
 		   ParticleType particleRenderType, float particleMass, float particleRadius,
 		   int numRows, int numCols,
@@ -318,6 +317,7 @@ public:
 	}
 	~Cloth() { for ( ClothConstraint* cc : m_clothConstraints ) delete cc; }
 
+	//FUNCTIONS//////////////////////////////////////////////////////////////////////////
 	Particle* const GetParticle( int rowStartTop, int colStartLeft )
 	{
 		if ( rowStartTop > m_numRows )
@@ -327,6 +327,8 @@ public:
 
 		return &m_clothParticles[ ( rowStartTop * m_numRows ) + colStartLeft ]; //Row-major.
 	}
+
+	//-----------------------------------------------------------------------------------
 	void Update( float deltaSeconds )
 	{
 		for ( int particleIndex = 0; particleIndex < m_numRows * m_numCols; particleIndex++ )
@@ -338,6 +340,8 @@ public:
 		GetParticle( 0, 0 )->SetPosition( m_currentTopLeftPosition );
 		GetParticle( 0, m_numCols - 1 )->SetPosition( CalcTopRightPosFromTopLeft() );
 	}
+
+	//-----------------------------------------------------------------------------------
 	void Render( bool showCloth = true, bool showConstraints = false, bool showParticles = false )
 	{
 		//Render the cloth "fabric" by taking every 4 particle positions (r,c) to (r+1,c+1) in to make a quad.
@@ -395,9 +399,13 @@ public:
 			m_clothParticles[ particleIndex ].Render();
 	}
 
-
+	//-----------------------------------------------------------------------------------
+	inline void MoveClothByOffset(const Vector3& offset) 
+	{
+		m_currentTopLeftPosition += offset;
+	}
 private:
-
+	//-----------------------------------------------------------------------------------
 	void AssignParticleStates( float baseDistance, float nonPlanarDepth, const Vector3& velocity = Vector3::ZERO ) //Note: 0,0 == top-left, so +x is right, +y is down.
 	{
 		//FORCES ASSIGNED HERE RIGHT NOW:
@@ -420,6 +428,7 @@ private:
 		}
 	}
 
+	//-----------------------------------------------------------------------------------
 	Vector3 CalcTopRightPosFromTopLeft()
 	{
 		m_currentTopRightPosition = m_currentTopLeftPosition;
@@ -427,12 +436,15 @@ private:
 		return m_currentTopRightPosition;
 	}
 
+	//-----------------------------------------------------------------------------------
 	void SetDistancesForConstraints( ConstraintType affectedType, double newRestDistance )
 	{
 		for ( unsigned int constraintIndex = 0; constraintIndex < m_clothConstraints.size(); constraintIndex++ )
 			if ( m_clothConstraints[ constraintIndex ]->type == affectedType )
 				m_clothConstraints[ constraintIndex ]->restDistance = newRestDistance;
 	}
+
+	//-----------------------------------------------------------------------------------
 	void AddConstraints( double baseDistance, double ratioStructuralToShear, double ratioStructuralToBend )
 	{
 		double shearDist = baseDistance * ratioStructuralToShear;
@@ -478,6 +490,8 @@ private:
 		for ( ClothConstraint* cc : tmpSet )
 			m_clothConstraints.push_back( cc );
 	}
+
+	//-----------------------------------------------------------------------------------
 	void SatisfyConstraints( float deltaSeconds )
 	{
 		for ( unsigned int numIteration = 0; numIteration < m_numConstraintSolverIterations; ++numIteration )
@@ -508,6 +522,7 @@ private:
 		}
 	}
 
+	//MEMBER VARIABLES//////////////////////////////////////////////////////////////////////////
 	Particle m_particleTemplate; //Without this and CloneForces, adding forces will crash when they go out of scope.
 	Vector3 m_currentTopLeftPosition; //m_clothParticles[0,0].position: MOVE THIS WITH WASD TO MOVE PINNED CORNERS!
 	Vector3 m_currentTopRightPosition; //Update whenever WASD event occurs as an optimization, else just recalculating per-tick.
