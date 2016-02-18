@@ -30,8 +30,8 @@ public:
 	SoundID m_twahSFX;
 	SoundID m_bgMusic;
 	Cloth* m_cloth;
-private:
 	Texture* m_marthTexture;
+private:
 	RGBA* m_color;
 	Camera3D* m_camera;
 };
