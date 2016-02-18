@@ -365,12 +365,16 @@ public:
 					GetParticle( r + 1, c )->GetPosition( particleStateBottomLeft );
 					GetParticle( r + 1, c + 1 )->GetPosition( particleStateBottomRight );
 
+					Vector2 currentU = Vector2::UNIT_X - (Vector2::UNIT_X * (1.0f - ((float)c / (float)m_numCols)));
+					Vector2 currentV = Vector2::UNIT_Y * ((float)r / (float)m_numRows);
+					Vector2 nextU = Vector2::UNIT_X - (Vector2::UNIT_X * (1.0f - ((float)(c + 1) / (float)m_numCols)));
+					Vector2 nextV = Vector2::UNIT_Y * ((float)(r + 1) / (float)m_numRows);
 					Vertex_PCT quad[ 4 ] =
 					{
-						Vertex_PCT( particleStateBottomLeft, RGBA::WHITE, Vector2::ONE ),
-						Vertex_PCT( particleStateBottomRight, RGBA::WHITE, Vector2::UNIT_Y ),
-						Vertex_PCT( particleStateTopRight, RGBA::WHITE, Vector2::ZERO ),
-						Vertex_PCT( particleStateTopLeft, RGBA::WHITE, Vector2::UNIT_X )
+						Vertex_PCT( particleStateBottomLeft, RGBA::WHITE, nextU + nextV),
+						Vertex_PCT( particleStateBottomRight, RGBA::WHITE, currentU + nextV ),
+						Vertex_PCT( particleStateTopRight, RGBA::WHITE, currentU + currentV ),
+						Vertex_PCT( particleStateTopLeft, RGBA::WHITE, nextU + currentV )
 					};
 					TheRenderer::instance->DrawVertexArray( quad, 4, TheRenderer::QUADS, TheGame::instance->m_marthTexture ); //Can't use AABB, cloth quads deform from being axis-aligned.
 				}
