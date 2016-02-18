@@ -37,10 +37,12 @@ CONSOLE_COMMAND(resetCloth)
 TheGame::TheGame()
 : m_marthTexture(Texture::CreateOrGetTexture("Data/Images/Test.png"))
 , m_camera(new Camera3D())
-, m_twahSFX( AudioSystem::instance->CreateOrGetSound( "Data/SFX/Twah.wav" ) )
+, m_twahSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/Twah.wav"))
+, m_bgMusic(AudioSystem::instance->CreateOrGetSound("Data/SFX/battleTheme.mp3"))
 , m_cloth( new Cloth(Vector3(144, 20, 97), PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt(2.f), 2.f))
 {
 	Console::instance->RunCommand("motd");
+	AudioSystem::instance->PlayLoopingSound(m_bgMusic);
 }
 
 //-----------------------------------------------------------------------------------

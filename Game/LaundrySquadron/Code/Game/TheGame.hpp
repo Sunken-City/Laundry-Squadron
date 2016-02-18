@@ -20,6 +20,7 @@ public:
 	static TheGame* instance;
 
 	SoundID m_twahSFX;
+	SoundID m_bgMusic;
 	Cloth* m_cloth;
 private:
 	Texture* m_marthTexture;
