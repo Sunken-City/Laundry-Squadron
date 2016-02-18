@@ -12,6 +12,7 @@ public:
 	TheGame();
 	~TheGame();
 	void Update(float deltaTime);
+	void MoveCloth(float deltaTime);
 	void UpdateCamera(float deltaTime);
 	void Render() const;
 	void SetUp3DPerspective() const;

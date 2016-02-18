@@ -10,6 +10,7 @@
 #include "Game/Camera3D.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Input/Console.hpp"
+#include "Engine/Core/StringUtils.hpp"
 #include "Game/Physics.hpp"
 
 #define WIN32_LEAN_AND_MEAN
@@ -37,7 +38,7 @@ TheGame::TheGame()
 : m_marthTexture(Texture::CreateOrGetTexture("Data/Images/Test.png"))
 , m_camera(new Camera3D())
 , m_twahSFX( AudioSystem::instance->CreateOrGetSound( "Data/SFX/Twah.wav" ) )
-, m_cloth( new Cloth( Vector3(0,0,5), PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt( 2.f ), 2.f ) )
+, m_cloth( new Cloth(Vector3(144, 20, 97), PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt(2.f), 2.f))
 {
 	Console::instance->RunCommand("motd");
 }
@@ -61,7 +62,14 @@ void TheGame::Update(float deltaTime)
 		return; //Don't do anything involving input updates.
 	}
 
-	UpdateCamera(deltaTime);
+	if (InputSystem::instance->IsKeyDown('Q'))
+	{
+		UpdateCamera(deltaTime);
+	}
+	else
+	{
+		MoveCloth(deltaTime);
+	}
 
 	m_cloth->Update( deltaTime );
 
@@ -70,6 +78,54 @@ void TheGame::Update(float deltaTime)
 		m_cloth->MoveClothByOffset(Vector3::UNIT_Z);
 	}
 }
+
+
+//-----------------------------------------------------------------------------------
+void TheGame::MoveCloth(float deltaTime)
+{
+	const float BASE_MOVE_SPEED = 4.5f;
+	float moveSpeed;
+
+	if (InputSystem::instance->IsKeyDown(VK_SHIFT))
+	{
+		moveSpeed = BASE_MOVE_SPEED * 8.0f;
+	}
+	else
+	{
+		moveSpeed = BASE_MOVE_SPEED;
+	}
+	if (InputSystem::instance->IsKeyDown('W'))
+	{
+		Vector3 cameraForwardXY = m_camera->GetForwardXY();
+		m_cloth->MoveClothByOffset(cameraForwardXY * (moveSpeed * deltaTime));
+	}
+	if (InputSystem::instance->IsKeyDown('S'))
+	{
+		Vector3 cameraForwardXY = m_camera->GetForwardXY();
+		m_cloth->MoveClothByOffset(-cameraForwardXY * (moveSpeed * deltaTime));
+	}
+	if (InputSystem::instance->IsKeyDown('D'))
+	{
+		Vector3 cameraLeftXY = m_camera->GetLeftXY();
+		m_cloth->MoveClothByOffset(-cameraLeftXY * (moveSpeed * deltaTime));
+	}
+	if (InputSystem::instance->IsKeyDown('A'))
+	{
+		Vector3 cameraLeftXY = m_camera->GetLeftXY();
+		m_cloth->MoveClothByOffset(cameraLeftXY * (moveSpeed * deltaTime));
+	}
+	if (InputSystem::instance->IsKeyDown(' '))
+	{
+		m_cloth->MoveClothByOffset(Vector3::UNIT_Z * (moveSpeed * deltaTime));
+	}
+	if (InputSystem::instance->IsKeyDown('Z'))
+	{
+		m_cloth->MoveClothByOffset(-Vector3::UNIT_Z * (moveSpeed * deltaTime));
+	}
+
+	InputSystem::instance->HideMouseCursor();
+}
+
 
 //-----------------------------------------------------------------------------------
 void TheGame::UpdateCamera(float deltaTime)
@@ -136,6 +192,9 @@ void TheGame::Render() const
 
 	DebugRenderer::instance->Render();
 	Console::instance->Render();
+	Vector3 position = m_camera->m_position;
+	EulerAngles orientation = m_camera->m_orientation;
+	//DebuggerPrintf("Camera Pos: (%f, %f, %f)   Camera Orientation: (%f, %f, %f)\n", position.x, position.y, position.z, orientation.rollDegreesAboutX, orientation.pitchDegreesAboutY, orientation.yawDegreesAboutZ);
 }
 
 //-----------------------------------------------------------------------------------

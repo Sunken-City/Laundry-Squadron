@@ -411,7 +411,7 @@ private:
 		//FORCES ASSIGNED HERE RIGHT NOW:
 		LinearDynamicsState* lds = new LinearDynamicsState(); //Need its forces to stay valid over cloth lifetime, particle will handle cleanup.
 		m_particleTemplate.SetParticleState( lds );
-		m_particleTemplate.AddForce( new GravityForce( .1f, Vector3(0,0,-1) ) );
+		m_particleTemplate.AddForce( new GravityForce( 0.1f, Vector3(0,0,-1) ) );
 		//m_particleTemplate.AddForce( new SpringForce( 0, Vector3::ZERO, .72f, .72f ) );
 		//m_particleTemplate.AddForce( new ConstantWindForce( 1.f, WORLD_RIGHT ) );
 
@@ -419,7 +419,7 @@ private:
 		{
 			for ( int c = 0; c < m_numCols; c++ )
 			{
-				Vector3 startPosition( r * baseDistance, c * baseDistance, nonPlanarDepth );
+				Vector3 startPosition( c * baseDistance, r * baseDistance, nonPlanarDepth );
 				Particle* const currentParticle = GetParticle( r, c );
 
 				currentParticle->SetParticleState( new LinearDynamicsState( startPosition, velocity ) ); //Particle will handle state cleanup.
@@ -432,7 +432,7 @@ private:
 	Vector3 CalcTopRightPosFromTopLeft()
 	{
 		m_currentTopRightPosition = m_currentTopLeftPosition;
-		m_currentTopRightPosition.y += ( ( m_numCols - 1 ) * static_cast<float>( m_baseDistanceBetweenParticles ) ); //Might need to change direction per engine basis.
+		m_currentTopRightPosition.x += ( ( m_numCols - 1 ) * static_cast<float>( m_baseDistanceBetweenParticles ) ); //Might need to change direction per engine basis.
 		return m_currentTopRightPosition;
 	}
 

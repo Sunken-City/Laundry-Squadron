@@ -3,8 +3,8 @@
 #include "Engine/Renderer/TheRenderer.hpp"
 
 Camera3D::Camera3D()
-: m_orientation(0.f, 0.f, 0.f)
-, m_position(8.f, 8.f, 100.f)
+: m_orientation(0.f, 0.f, 90.f)
+, m_position(144.f, 0.f, 100.f)
 {
 }
 
