@@ -17,6 +17,7 @@
 #include<Windows.h>
 
 TheGame* TheGame::instance = nullptr;
+const Vector3 TheGame::s_clothStartingPosition = Vector3(144, 20, 98);
 
 //-----------------------------------------------------------------------------------
 CONSOLE_COMMAND(twah)
@@ -30,7 +31,7 @@ CONSOLE_COMMAND(resetCloth)
 {
 	UNUSED(args);
 	delete TheGame::instance->m_cloth;
-	TheGame::instance->m_cloth = new Cloth(Vector3(0, 0, 5), PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt(2.f), 2.f);
+	TheGame::instance->m_cloth = new Cloth(TheGame::instance->s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt(2.f), 2.f);
 }
 
 //-----------------------------------------------------------------------------------
@@ -39,7 +40,7 @@ TheGame::TheGame()
 , m_camera(new Camera3D())
 , m_twahSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/Twah.wav"))
 , m_bgMusic(AudioSystem::instance->CreateOrGetSound("Data/SFX/battleTheme.mp3"))
-, m_cloth( new Cloth(Vector3(144, 20, 97), PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt(2.f), 2.f))
+, m_cloth(new Cloth(s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt(2.f), 2.f))
 {
 	Console::instance->RunCommand("motd");
 	AudioSystem::instance->PlayLoopingSound(m_bgMusic);
@@ -96,33 +97,25 @@ void TheGame::MoveCloth(float deltaTime)
 	{
 		moveSpeed = BASE_MOVE_SPEED;
 	}
-	if (InputSystem::instance->IsKeyDown('W'))
-	{
-		Vector3 cameraForwardXY = m_camera->GetForwardXY();
-		m_cloth->MoveClothByOffset(cameraForwardXY * (moveSpeed * deltaTime));
-	}
-	if (InputSystem::instance->IsKeyDown('S'))
-	{
-		Vector3 cameraForwardXY = m_camera->GetForwardXY();
-		m_cloth->MoveClothByOffset(-cameraForwardXY * (moveSpeed * deltaTime));
-	}
-	if (InputSystem::instance->IsKeyDown('D'))
+	if (InputSystem::instance->IsKeyDown('D') || InputSystem::instance->IsKeyDown(InputSystem::ExtraKeys::RIGHT))
 	{
 		Vector3 cameraLeftXY = m_camera->GetLeftXY();
 		m_cloth->MoveClothByOffset(-cameraLeftXY * (moveSpeed * deltaTime));
+		Vector3 maxOffset = (s_clothStartingPosition + Vector3(12.0f, 0.0f, 0.0f));
+		if (m_cloth->GetTopLeftPosition().x > maxOffset.x)
+		{
+			m_cloth->SetTopLeftPosition(maxOffset);
+		}
 	}
-	if (InputSystem::instance->IsKeyDown('A'))
+	if (InputSystem::instance->IsKeyDown('A') || InputSystem::instance->IsKeyDown(InputSystem::ExtraKeys::LEFT))
 	{
 		Vector3 cameraLeftXY = m_camera->GetLeftXY();
 		m_cloth->MoveClothByOffset(cameraLeftXY * (moveSpeed * deltaTime));
-	}
-	if (InputSystem::instance->IsKeyDown(' '))
-	{
-		m_cloth->MoveClothByOffset(Vector3::UNIT_Z * (moveSpeed * deltaTime));
-	}
-	if (InputSystem::instance->IsKeyDown('Z'))
-	{
-		m_cloth->MoveClothByOffset(-Vector3::UNIT_Z * (moveSpeed * deltaTime));
+		Vector3 maxOffset = (s_clothStartingPosition - Vector3(16.0f, 0.0f, 0.0f));
+		if (m_cloth->GetTopLeftPosition().x < maxOffset.x)
+		{
+			m_cloth->SetTopLeftPosition(maxOffset);
+		}
 	}
 
 	InputSystem::instance->HideMouseCursor();

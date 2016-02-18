@@ -403,6 +403,19 @@ public:
 	inline void MoveClothByOffset(const Vector3& offset) 
 	{
 		m_currentTopLeftPosition += offset;
+		m_currentTopRightPosition += offset;
+	}
+	
+	//-----------------------------------------------------------------------------------
+	inline Vector3 GetTopLeftPosition()
+	{
+		return m_currentTopLeftPosition;
+	}
+
+	//-----------------------------------------------------------------------------------
+	inline void SetTopLeftPosition(const Vector3& offset)
+	{
+		m_currentTopLeftPosition = offset;
 	}
 private:
 	//-----------------------------------------------------------------------------------
