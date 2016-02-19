@@ -532,7 +532,8 @@ private:
 					continue; //Skip solving for a step.
 				double currentDistance = currentDisplacement.CalculateMagnitude();
 
-				Vector3 halfCorrectionVector = currentDisplacement * static_cast<float>( 0.5 * ( 1.0 - ( currentConstraint->restDistance / currentDistance ) ) );
+				float stiffness = 20.f;
+				Vector3 halfCorrectionVector = currentDisplacement * stiffness * static_cast<float>( 0.5 * ( 1.0 - ( currentConstraint->restDistance / currentDistance ) ) );
 				// Note last term is ( currDist - currConstraint.restDist ) / currDist, just divided through.
 
 				//Move p2 towards p1 (- along halfVec), p1 towards p2 (+ along halfVec).
