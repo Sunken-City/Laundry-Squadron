@@ -365,10 +365,10 @@ public:
 					GetParticle( r + 1, c )->GetPosition( particleStateBottomLeft );
 					GetParticle( r + 1, c + 1 )->GetPosition( particleStateBottomRight );
 
-					Vector2 currentU = Vector2::UNIT_X - (Vector2::UNIT_X * (1.0f - ((float)c / (float)m_numCols)));
-					Vector2 currentV = Vector2::UNIT_Y * ((float)r / (float)m_numRows);
-					Vector2 nextU = Vector2::UNIT_X - (Vector2::UNIT_X * (1.0f - ((float)(c + 1) / (float)m_numCols)));
-					Vector2 nextV = Vector2::UNIT_Y * ((float)(r + 1) / (float)m_numRows);
+					Vector2 currentU = Vector2::UNIT_X - (Vector2::UNIT_X * (((float)(c + 1) / (float)(m_numCols - 1))));
+					Vector2 currentV = Vector2::UNIT_Y * ((float)r / (float)(m_numRows - 1));
+					Vector2 nextU = Vector2::UNIT_X - (Vector2::UNIT_X * (((float)c / (float)(m_numCols - 1))));
+					Vector2 nextV = Vector2::UNIT_Y * ((float)(r + 1) / (float)(m_numRows - 1));
 					Vertex_PCT quad[ 4 ] =
 					{
 						Vertex_PCT( particleStateBottomLeft, RGBA::WHITE, nextU + nextV),
@@ -533,7 +533,7 @@ private:
 				double currentDistance = currentDisplacement.CalculateMagnitude();
 
 				float stiffness = 20.f;
-				Vector3 halfCorrectionVector = currentDisplacement * stiffness * static_cast<float>( 0.5 * ( 1.0 - ( currentConstraint->restDistance / currentDistance ) ) );
+				Vector3 halfCorrectionVector = currentDisplacement /** stiffness*/ * static_cast<float>( 0.5 * ( 1.0 - ( currentConstraint->restDistance / currentDistance ) ) );
 				// Note last term is ( currDist - currConstraint.restDist ) / currDist, just divided through.
 
 				//Move p2 towards p1 (- along halfVec), p1 towards p2 (+ along halfVec).
