@@ -8,14 +8,14 @@ class Vector3
 public:
 	//CONSTRUCTORS//////////////////////////////////////////////////////////////////////////	
 	Vector3();
-	Vector3(float initialValue);
-	Vector3(float initialX, float initialY, float initialZ);
+	Vector3(double initialValue);
+	Vector3(double initialX, double initialY, double initialZ);
 	Vector3(const Vector3& other);
 	Vector3(const Vector3Int& other);
-	void SetXYZ(float newX, float newY, float newZ);
+	void SetXYZ(double newX, double newY, double newZ);
 
 	//FUNCTIONS//////////////////////////////////////////////////////////////////////////
-	float CalculateMagnitude() const;
+	double CalculateMagnitude() const;
 	void Normalize();
 	static Vector3 Cross(const Vector3& first, const Vector3& second);
 	static Vector3 GetNormalized(const Vector3& input);
@@ -24,7 +24,7 @@ public:
 	//OPERATORS//////////////////////////////////////////////////////////////////////////
 	Vector3& operator+=(const Vector3& rhs);
 	Vector3& operator-=(const Vector3& rhs);
-	Vector3& operator*=(const float& scalarConstant);	
+	Vector3& operator*=(const double& scalarConstant);	
 	Vector3& operator=(Vector2 rhs);
 	
 	//CONSTANTS//////////////////////////////////////////////////////////////////////////
@@ -38,9 +38,9 @@ public:
 	static const Vector3 RIGHT;
 
 	//MEMBER VARIABLES//////////////////////////////////////////////////////////////////////////
-	float x;
-	float y;
-	float z;
+	double x;
+	double y;
+	double z;
 };
 
 //----------------------------------------------------------------------
@@ -58,7 +58,7 @@ inline Vector3 operator-(Vector3 lhs, const Vector3& rhs)
 }
 
 //----------------------------------------------------------------------
-inline Vector3 operator*(Vector3 lhs, const float& scalarConstant)
+inline Vector3 operator*(Vector3 lhs, const double& scalarConstant)
 {
 	lhs *= scalarConstant;
 	return lhs;
