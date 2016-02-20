@@ -18,9 +18,9 @@ public:
 
 	//FUNCTIONS//////////////////////////////////////////////////////////////////////////
 	void Update(float deltaTime);
+	void Render() const;
 	void MoveCloth(float deltaTime);
 	void UpdateCamera(float deltaTime);
-	void Render() const;
 	void SetUp3DPerspective() const;
 	void RenderAxisLines() const;
 
@@ -33,7 +33,7 @@ public:
 	SoundID m_bgMusic;
 	Cloth* m_cloth;
 	Texture* m_marthTexture;
-	std::vector<Projectile> m_balls;
+	std::vector<Projectile> m_projectiles;
 private:
 	RGBA* m_color;
 	Camera3D* m_camera;

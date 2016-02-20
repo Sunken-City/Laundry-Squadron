@@ -198,7 +198,6 @@ Vector3 LinearDynamicsState::CalcNetForceForMass( float mass ) const
 	return netForce;
 }
 
-
 //--------------------------------------------------------------------------------------------------------------
 Vector3 GravityForce::CalcForceForStateAndMass( const LinearDynamicsState * lds, float mass ) const
 {

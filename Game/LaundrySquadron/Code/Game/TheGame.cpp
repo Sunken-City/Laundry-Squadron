@@ -80,8 +80,56 @@ void TheGame::Update(float deltaTime)
 	{
 		m_cloth->MoveClothByOffset(Vector3::UNIT_Z);
 	}
+	if (InputSystem::instance->WasKeyJustPressed('T'))
+	{
+		m_projectiles.push_back(Projectile(1.0f, 1.0f, LinearDynamicsState(Vector3(144, 100, 98), -Vector3::UNIT_Y * 10.0f)));
+	}
+
+	for (Projectile& bullet : m_projectiles)
+	{
+		bullet.Update(deltaTime);
+
+		auto particleIterator = m_cloth->m_clothParticles.begin();
+		while (particleIterator != m_cloth->m_clothParticles.end()) 
+		{
+			LinearDynamicsState* clothParticleState = (*particleIterator).m_state;
+			Projectile clothParticle (1.0f, 0.1f, LinearDynamicsState(clothParticleState->GetPosition(), clothParticleState->GetVelocity()));
+			float collisionFactor = bullet.IsColliding(bullet, clothParticle);
+			if (collisionFactor != -1.0f)
+			{
+				particleIterator = m_cloth->m_clothParticles.erase(particleIterator);
+			}
+			else
+			{
+				++particleIterator;
+			}
+		}		
+	}
 }
 
+//-----------------------------------------------------------------------------------
+void TheGame::Render() const
+
+{
+	SetUp3DPerspective();
+	m_camera->UpdateViewFromCamera();
+
+	TheRenderer::instance->EnableDepthTest(true);
+	TheRenderer::instance->DrawTexturedAABB(AABB2(Vector2(0.0f, 0.0f), Vector2(300.f, 300.f)), Vector2(1.0f, 1.0f), Vector2(0.0f, 0.0f), m_marthTexture, RGBA::WHITE);
+	RenderAxisLines();
+
+	m_cloth->Render(true, true, true);
+	for (const Projectile& bullet : m_projectiles)
+	{
+		bullet.Render();
+	}
+
+	DebugRenderer::instance->Render();
+	Console::instance->Render();
+	Vector3 position = m_camera->m_position;
+	EulerAngles orientation = m_camera->m_orientation;
+	//DebuggerPrintf("Camera Pos: (%f, %f, %f)   Camera Orientation: (%f, %f, %f)\n", position.x, position.y, position.z, orientation.rollDegreesAboutX, orientation.pitchDegreesAboutY, orientation.yawDegreesAboutZ);
+}
 
 //-----------------------------------------------------------------------------------
 void TheGame::MoveCloth(float deltaTime)
@@ -171,25 +219,6 @@ void TheGame::UpdateCamera(float deltaTime)
 	m_camera->m_orientation.yawDegreesAboutZ -= ((float)cursorDelta.x * 0.022f);
 	float proposedPitch = m_camera->m_orientation.pitchDegreesAboutY + ((float)cursorDelta.y * 0.022f);
 	m_camera->m_orientation.pitchDegreesAboutY = MathUtils::Clamp(proposedPitch, -89.9f, 89.9f);
-}
-
-//-----------------------------------------------------------------------------------
-void TheGame::Render() const
-{
-	SetUp3DPerspective();
-	m_camera->UpdateViewFromCamera();
-
-	TheRenderer::instance->EnableDepthTest(true);
-	TheRenderer::instance->DrawTexturedAABB(AABB2(Vector2(0.0f, 0.0f), Vector2(300.f, 300.f)), Vector2(1.0f, 1.0f), Vector2(0.0f, 0.0f), m_marthTexture, RGBA::WHITE);
-	RenderAxisLines();
-
-	m_cloth->Render(true, true, true);
-
-	DebugRenderer::instance->Render();
-	Console::instance->Render();
-	Vector3 position = m_camera->m_position;
-	EulerAngles orientation = m_camera->m_orientation;
-	//DebuggerPrintf("Camera Pos: (%f, %f, %f)   Camera Orientation: (%f, %f, %f)\n", position.x, position.y, position.z, orientation.rollDegreesAboutX, orientation.pitchDegreesAboutY, orientation.yawDegreesAboutZ);
 }
 
 //-----------------------------------------------------------------------------------

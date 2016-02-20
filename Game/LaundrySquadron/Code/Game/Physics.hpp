@@ -159,7 +159,7 @@ private:
 
 	Vector3 m_position;
 	Vector3 m_velocity;
-	std::vector< Force* > m_forces; //i.e. All forces acting on whatever this LDS is attached to.
+	std::vector<Force*> m_forces; //i.e. All forces acting on whatever this LDS is attached to.
 
 	LinearDynamicsState dStateForMass( float mass ) const; //Solves accel, for use in Step() integrators.
 	Vector3 CalcNetForceForMass( float mass ) const; //Used by dState(), gets Sigma[F] by looping m_forces.
@@ -181,7 +181,7 @@ public:
 	}
 	~Particle();
 
-	void GetParticleState( LinearDynamicsState& out_state ) const { out_state = *m_state; }
+	void GetParticleState(LinearDynamicsState& out_state) const { out_state = *m_state; }
 	void SetParticleState( LinearDynamicsState* newState ) { m_state = newState; }
 	void Render();
 	void StepAndAge( float deltaSeconds );
@@ -197,7 +197,7 @@ public:
 	bool GetVelocity( Vector3& out_velocity );
 	bool SetVelocity( const Vector3& newVelocity );
 
-
+	LinearDynamicsState* m_state;
 private:
 
 	float m_mass;
@@ -206,7 +206,6 @@ private:
 	ParticleType m_renderType;
 	float m_renderRadius;
 
-	LinearDynamicsState* m_state;
 };
 
 
@@ -323,7 +322,6 @@ public:
 			return nullptr;
 		if ( colStartLeft > m_numCols )
 			return nullptr;
-
 		return &m_clothParticles[ ( rowStartTop * m_numRows ) + colStartLeft ]; //Row-major.
 	}
 
@@ -552,6 +550,7 @@ private:
 	double m_ratioDistanceStructuralToShear;
 	double m_ratioDistanceStructuralToBend;
 
-	std::vector< Particle > m_clothParticles; //A 1D array, use GetParticle for 2D row-col interfacing accesses. Vector in case we want to push more at runtime.
-	std::vector< ClothConstraint* > m_clothConstraints; //TODO: make c-style after getting fixed-size formula given cloth dims?
+	std::vector<ClothConstraint*> m_clothConstraints; //TODO: make c-style after getting fixed-size formula given cloth dims?
+public:
+	std::vector<Particle> m_clothParticles; //A 1D array, use GetParticle for 2D row-col interfacing accesses. Vector in case we want to push more at runtime.
 };

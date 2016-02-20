@@ -1,5 +1,6 @@
 #include "Game/Projectile.hpp"
 #include "Engine/Time/Time.hpp"
+#include "Engine/Renderer/TheRenderer.hpp"
 
 
 //-------------------------------------------------------------------------------------------------
@@ -37,6 +38,10 @@ void Projectile::Update(float deltaSeconds)
 	m_state.SetVelocity(m_state.GetVelocity() + Vector3::ZERO);
 }
 
+void Projectile::Render() const
+{
+	TheRenderer::instance->DrawUVSphere(m_state.GetPosition(), m_radius, 10);
+}
 
 //-------------------------------------------------------------------------------------------------
 void Projectile::BackToPrevious()
