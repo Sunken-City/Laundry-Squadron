@@ -1,6 +1,8 @@
 #pragma once
 #include "Engine/Audio/Audio.hpp"
 #include "Engine/Math/Vector3.hpp"
+#include "Game/Projectile.hpp"
+#include <vector>
 
 class Texture;
 class RGBA;
@@ -31,6 +33,7 @@ public:
 	SoundID m_bgMusic;
 	Cloth* m_cloth;
 	Texture* m_marthTexture;
+	std::vector<Projectile> m_balls;
 private:
 	RGBA* m_color;
 	Camera3D* m_camera;

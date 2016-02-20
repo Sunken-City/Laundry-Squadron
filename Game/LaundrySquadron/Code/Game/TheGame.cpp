@@ -43,7 +43,7 @@ TheGame::TheGame()
 , m_cloth(new Cloth(s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt(2.f), 2.f))
 {
 	Console::instance->RunCommand("motd");
-	AudioSystem::instance->PlayLoopingSound(m_bgMusic);
+	AudioSystem::instance->PlayLoopingSound(m_bgMusic); //There's no way to stop it c:
 }
 
 //-----------------------------------------------------------------------------------

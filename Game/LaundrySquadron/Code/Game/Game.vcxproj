@@ -100,6 +100,7 @@
     <ClCompile Include="Camera3D.cpp" />
     <ClCompile Include="Main_Win32.cpp" />
     <ClCompile Include="Physics.cpp" />
+    <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="TheApp.cpp" />
     <ClCompile Include="TheGame.cpp" />
   </ItemGroup>
@@ -111,6 +112,7 @@
   <ItemGroup>
     <ClInclude Include="Camera3D.hpp" />
     <ClInclude Include="Physics.hpp" />
+    <ClInclude Include="Projectile.hpp" />
     <ClInclude Include="TheApp.hpp" />
     <ClInclude Include="TheGame.hpp" />
   </ItemGroup>

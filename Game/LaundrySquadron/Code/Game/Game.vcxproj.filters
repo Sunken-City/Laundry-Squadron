@@ -23,6 +23,9 @@
     <ClCompile Include="Physics.cpp">
       <Filter>General</Filter>
     </ClCompile>
+    <ClCompile Include="Projectile.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TheGame.hpp">
@@ -35,6 +38,9 @@
       <Filter>General</Filter>
     </ClInclude>
     <ClInclude Include="Physics.hpp">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="Projectile.hpp">
       <Filter>General</Filter>
     </ClInclude>
   </ItemGroup>

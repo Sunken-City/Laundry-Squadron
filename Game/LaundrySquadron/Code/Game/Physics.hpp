@@ -9,10 +9,6 @@
 #include "Engine/Renderer/AABB3.hpp"
 #include "Engine/Renderer/Vertex.hpp"
 
-//For a quick texture
-#include "Game/TheGame.hpp"
-
-
 //-----------------------------------------------------------------------------
 enum ParticleType { /*PARTICLE_AABB2,*/ PARTICLE_AABB3, PARTICLE_SPHERE }; //FUTURE IDEAS TODO: Add whatever TheRenderer supports as a Draw call!
 
@@ -376,7 +372,7 @@ public:
 						Vertex_PCT( particleStateTopRight, RGBA::WHITE, currentU + currentV ),
 						Vertex_PCT( particleStateTopLeft, RGBA::WHITE, nextU + currentV )
 					};
-					TheRenderer::instance->DrawVertexArray( quad, 4, TheRenderer::QUADS, TheGame::instance->m_marthTexture ); //Can't use AABB, cloth quads deform from being axis-aligned.
+					TheRenderer::instance->DrawVertexArray( quad, 4, TheRenderer::QUADS, Texture::CreateOrGetTexture("Data/Images/Test.png")); //Can't use AABB, cloth quads deform from being axis-aligned.
 				}
 			}
 		}
