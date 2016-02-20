@@ -19,7 +19,7 @@ Vector3::Vector3()
 }
 
 //-----------------------------------------------------------------------------------
-Vector3::Vector3(double initialX, double initialY, double initialZ)
+Vector3::Vector3(float initialX, float initialY, float initialZ)
 	: x(initialX)
 	, y(initialY)
 	, z(initialZ)
@@ -36,14 +36,14 @@ Vector3::Vector3(const Vector3& other)
 
 //-----------------------------------------------------------------------------------
 Vector3::Vector3(const Vector3Int& other)
-: x(static_cast<double>(other.x))
-, y(static_cast<double>(other.y))
-, z(static_cast<double>(other.z))
+: x(static_cast<float>(other.x))
+, y(static_cast<float>(other.y))
+, z(static_cast<float>(other.z))
 {
 
 }
 
-Vector3::Vector3(double initialValue)
+Vector3::Vector3(float initialValue)
 {
 	x = initialValue;
 	y = initialValue;
@@ -51,7 +51,7 @@ Vector3::Vector3(double initialValue)
 }
 
 //-----------------------------------------------------------------------------------
-void Vector3::SetXYZ(double newX, double newY, double newZ)
+void Vector3::SetXYZ(float newX, float newY, float newZ)
 {
 	x = newX;
 	y = newY;
@@ -59,7 +59,7 @@ void Vector3::SetXYZ(double newX, double newY, double newZ)
 }
 
 //-----------------------------------------------------------------------------------
-double Vector3::CalculateMagnitude() const
+float Vector3::CalculateMagnitude() const
 {
 	return sqrt((x*x) + (y*y) + (z*z));
 }
@@ -67,7 +67,7 @@ double Vector3::CalculateMagnitude() const
 //-----------------------------------------------------------------------------------
 void Vector3::Normalize()
 {
-	double len = CalculateMagnitude();
+	float len = CalculateMagnitude();
 	if (len == 0.f)return;
 	x /= len;
 	y /= len;
@@ -87,7 +87,7 @@ Vector3 Vector3::Cross(const Vector3& first, const Vector3& second)
 //-----------------------------------------------------------------------------------
 Vector3 Vector3::GetNormalized(const Vector3& input)
 {
-	double len = input.CalculateMagnitude();
+	float len = input.CalculateMagnitude();
 	if (len == 0.f)
 	{
 		return Vector3::ZERO;
@@ -124,7 +124,7 @@ Vector3& Vector3::operator-=(const Vector3& rhs)
 }
 
 //-----------------------------------------------------------------------------------
-Vector3& Vector3::operator*=(const double& scalarConstant)
+Vector3& Vector3::operator*=(const float& scalarConstant)
 {
 	this->x *= scalarConstant;
 	this->y *= scalarConstant;
