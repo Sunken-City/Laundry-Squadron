@@ -185,6 +185,7 @@ public:
 	void SetParticleState( LinearDynamicsState* newState ) { m_state = newState; }
 	void Render();
 	void StepAndAge( float deltaSeconds );
+	void SetIsExpired( bool newVal ) { m_secondsToLive = newVal ? -1.f : 1.f; }
 	bool IsExpired() const { return m_secondsToLive <= 0.f; }
 	void GetForces( std::vector< Force* >& out_forces ) const;
 	void AddForce( Force* newForce );
@@ -307,7 +308,8 @@ public:
 	{
 		m_clothParticles.reserve( numRows * numCols );
 		for ( int i = 0; i < numRows * numCols; i++ )
-			m_clothParticles.push_back( Particle( particleRenderType, particleMass, -1.f, particleRadius ) ); //Doesn't assign a dynamics state.
+			m_clothParticles.push_back( Particle( particleRenderType, particleMass, 1.f, particleRadius ) ); //Doesn't assign a dynamics state.
+				//Needs a positive secondsToLive or else expiration logic will say it's already invisible/dead.
 
 		AssignParticleStates( static_cast<float>( baseDistanceBetweenParticles ), originTopLeftPosition.z, initialGlobalVelocity );
 
@@ -354,9 +356,20 @@ public:
 			{
 				for ( int c = 0; ( c + 1 ) < m_numCols; c++ )
 				{
+					if ( GetParticle( r, c )->IsExpired() )
+						continue; //Don't draw a quad for a particle that's been shot.
 					GetParticle( r, c )->GetPosition( particleStateTopLeft );
+
+					if ( GetParticle( r, c )->IsExpired() )
+						continue;
 					GetParticle( r, c + 1 )->GetPosition( particleStateTopRight );
+
+					if ( GetParticle( r, c )->IsExpired() )
+						continue;
 					GetParticle( r + 1, c )->GetPosition( particleStateBottomLeft );
+
+					if ( GetParticle( r, c )->IsExpired() )
+						continue;
 					GetParticle( r + 1, c + 1 )->GetPosition( particleStateBottomRight );
 
 					Vector2 currentU = Vector2::UNIT_X - (Vector2::UNIT_X * (((float)(c + 1) / (float)(m_numCols - 1))));
@@ -527,7 +540,7 @@ private:
 				double currentDistance = currentDisplacement.CalculateMagnitude();
 
 				float stiffness = 20.f;
-				Vector3 halfCorrectionVector = currentDisplacement /** stiffness*/ * static_cast<float>( 0.5 * ( 1.0 - ( currentConstraint->restDistance / currentDistance ) ) );
+				Vector3 halfCorrectionVector = currentDisplacement * stiffness * static_cast<float>( 0.5 * ( 1.0 - ( currentConstraint->restDistance / currentDistance ) ) );
 				// Note last term is ( currDist - currConstraint.restDist ) / currDist, just divided through.
 
 				//Move p2 towards p1 (- along halfVec), p1 towards p2 (+ along halfVec).

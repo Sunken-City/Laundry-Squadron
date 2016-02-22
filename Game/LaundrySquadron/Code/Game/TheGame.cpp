@@ -95,14 +95,15 @@ void TheGame::Update(float deltaTime)
 			LinearDynamicsState* clothParticleState = (*particleIterator).m_state;
 			Projectile clothParticle (1.0f, 0.1f, LinearDynamicsState(clothParticleState->GetPosition(), clothParticleState->GetVelocity()));
 			float collisionFactor = bullet.IsColliding(bullet, clothParticle);
-			if (collisionFactor != -1.0f)
+			if ( collisionFactor != -1.0f )
 			{
-				particleIterator = m_cloth->m_clothParticles.erase(particleIterator);
+// 				particleIterator = m_cloth->m_clothParticles.erase(particleIterator);
+				particleIterator->SetIsExpired( true );
 			}
-			else
-			{
+// 			else
+// 			{
 				++particleIterator;
-			}
+// 			}
 		}		
 	}
 }

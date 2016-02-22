@@ -47,7 +47,7 @@ void Particle::StepAndAge( float deltaSeconds )
 {
 //	m_state->StepWithForwardEuler( m_mass, deltaSeconds );
 	m_state->StepWithVerlet( m_mass, deltaSeconds );
-	m_secondsToLive -= deltaSeconds;
+//	m_secondsToLive -= deltaSeconds;
 }
 
 
