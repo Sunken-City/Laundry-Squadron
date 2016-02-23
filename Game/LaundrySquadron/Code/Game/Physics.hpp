@@ -3,6 +3,7 @@
 #include <set>
 #include "Engine/Math/Vector3.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
+#include "Engine/Core/StringUtils.hpp"
 #include "Engine/Audio/Audio.hpp"
 #include "Engine/Renderer/TheRenderer.hpp"
 #include "Engine/Renderer/Texture.hpp"
@@ -330,7 +331,7 @@ public:
 	//-----------------------------------------------------------------------------------
 	void Update( float deltaSeconds )
 	{
-		float fixedTimeStep = .001f;
+		float fixedTimeStep = .05f;
 
 		for ( int particleIndex = 0; particleIndex < m_numRows * m_numCols; particleIndex++ )
 			m_clothParticles[ particleIndex ].StepAndAge( fixedTimeStep );
@@ -349,7 +350,6 @@ public:
 			}
 		}
 
-//deltaseconds constant
 		SatisfyConstraints( fixedTimeStep );
 
 		//Pins the corners.
@@ -428,6 +428,13 @@ public:
 	//-----------------------------------------------------------------------------------
 	inline void MoveClothByOffset(const Vector3& offset) 
 	{
+		for (int c = 0; c < m_numCols; c++)
+		{
+			Vector3 currentPosition;
+			Particle* currentParticle = GetParticle(0, c);
+			currentParticle->GetPosition(currentPosition);
+			currentParticle->SetPosition(currentPosition + offset);
+		}
 		m_currentTopLeftPosition += offset;
 		m_currentTopRightPosition += offset;
 	}
@@ -458,7 +465,8 @@ private:
 		{
 			for ( int c = 0; c < m_numCols; c++ )
 			{
-				Vector3 startPosition( c * baseDistance, r * baseDistance, nonPlanarDepth );
+				Vector3 startPosition(c * baseDistance, r * baseDistance, 0.0f);
+				startPosition += m_currentTopLeftPosition;
 				Particle* const currentParticle = GetParticle( r, c );
 
 				currentParticle->SetParticleState( new LinearDynamicsState( startPosition, velocity ) ); //Particle will handle state cleanup.
@@ -533,6 +541,7 @@ private:
 	//-----------------------------------------------------------------------------------
 	void SatisfyConstraints( float deltaSeconds )
 	{
+		double norm = 0.0;
 		for ( unsigned int numIteration = 0; numIteration < m_numConstraintSolverIterations; ++numIteration )
 		{
 			for ( unsigned int constraintIndex = 0; constraintIndex < m_clothConstraints.size(); constraintIndex++ )
@@ -555,11 +564,14 @@ private:
 				Vector3 halfCorrectionVector = currentDisplacement * stiffness * static_cast<float>( 0.5 * ( 1.0 - ( currentConstraint->restDistance / currentDistance ) ) );
 				// Note last term is ( currDist - currConstraint.restDist ) / currDist, just divided through.
 
+				norm += (currentConstraint->restDistance - currentDistance) * (currentConstraint->restDistance - currentDistance);
+
 				//Move p2 towards p1 (- along halfVec), p1 towards p2 (+ along halfVec).
 				currentConstraint->p1->Translate( halfCorrectionVector * deltaSeconds );
 				currentConstraint->p2->Translate( -halfCorrectionVector * deltaSeconds );
 			}
 		}
+		DebuggerPrintf("Error: %f\n", norm);
 	}
 
 	//MEMBER VARIABLES//////////////////////////////////////////////////////////////////////////

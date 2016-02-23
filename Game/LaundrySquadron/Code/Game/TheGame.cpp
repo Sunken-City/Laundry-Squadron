@@ -17,7 +17,7 @@
 #include<Windows.h>
 
 TheGame* TheGame::instance = nullptr;
-const Vector3 TheGame::s_clothStartingPosition = Vector3(144, 20, 98);
+const Vector3 TheGame::s_clothStartingPosition = Vector3(144.f, 20.f, 98.f);
 
 //-----------------------------------------------------------------------------------
 CONSOLE_COMMAND(twah)
