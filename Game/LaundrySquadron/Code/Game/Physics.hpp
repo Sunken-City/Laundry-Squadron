@@ -330,14 +330,33 @@ public:
 	//-----------------------------------------------------------------------------------
 	void Update( float deltaSeconds )
 	{
-		for ( int particleIndex = 0; particleIndex < m_numRows * m_numCols; particleIndex++ )
-			m_clothParticles[ particleIndex ].StepAndAge( deltaSeconds );
+		float fixedTimeStep = .001f;
 
-		SatisfyConstraints( deltaSeconds );
+		for ( int particleIndex = 0; particleIndex < m_numRows * m_numCols; particleIndex++ )
+			m_clothParticles[ particleIndex ].StepAndAge( fixedTimeStep );
+
+		//In future could remove this to a RemoveConstraintForParticle(Particle* p) that finds and erases all constraints referencing p, to not loop per frame.
+		for ( auto constraintIter = m_clothConstraints.begin(); constraintIter != m_clothConstraints.end(); )
+		{
+			ClothConstraint* cc = *constraintIter;
+			if ( cc->p1->IsExpired() && cc->p2->IsExpired() )
+			{
+				constraintIter = m_clothConstraints.erase( constraintIter );
+			}
+			else
+			{
+				++constraintIter;
+			}
+		}
+
+//deltaseconds constant
+		SatisfyConstraints( fixedTimeStep );
 
 		//Pins the corners.
-		GetParticle( 0, 0 )->SetPosition( m_currentTopLeftPosition );
-		GetParticle( 0, m_numCols - 1 )->SetPosition( CalcTopRightPosFromTopLeft() );
+		if ( GetParticle( 0, 0 )->IsExpired() == false )
+			GetParticle( 0, 0 )->SetPosition( m_currentTopLeftPosition );
+		if ( GetParticle( 0, m_numCols - 1 )->IsExpired() == false )
+			GetParticle( 0, m_numCols - 1 )->SetPosition( CalcTopRightPosFromTopLeft() );
 	}
 
 	//-----------------------------------------------------------------------------------
@@ -356,20 +375,12 @@ public:
 			{
 				for ( int c = 0; ( c + 1 ) < m_numCols; c++ )
 				{
-					if ( GetParticle( r, c )->IsExpired() )
+					if ( GetParticle( r, c )->IsExpired() && GetParticle( r, c )->IsExpired() && GetParticle( r, c )->IsExpired() && GetParticle( r, c )->IsExpired() )
 						continue; //Don't draw a quad for a particle that's been shot.
+
 					GetParticle( r, c )->GetPosition( particleStateTopLeft );
-
-					if ( GetParticle( r, c )->IsExpired() )
-						continue;
 					GetParticle( r, c + 1 )->GetPosition( particleStateTopRight );
-
-					if ( GetParticle( r, c )->IsExpired() )
-						continue;
 					GetParticle( r + 1, c )->GetPosition( particleStateBottomLeft );
-
-					if ( GetParticle( r, c )->IsExpired() )
-						continue;
 					GetParticle( r + 1, c + 1 )->GetPosition( particleStateBottomRight );
 
 					Vector2 currentU = Vector2::UNIT_X - (Vector2::UNIT_X * (((float)(c + 1) / (float)(m_numCols - 1))));
@@ -410,7 +421,8 @@ public:
 			return;
 
 		for ( int particleIndex = 0; particleIndex < m_numRows * m_numCols; particleIndex++ )
-			m_clothParticles[ particleIndex ].Render();
+			if ( m_clothParticles[ particleIndex ].IsExpired() == false )
+				m_clothParticles[ particleIndex ].Render();
 	}
 
 	//-----------------------------------------------------------------------------------
@@ -556,7 +568,7 @@ private:
 	Vector3 m_currentTopRightPosition; //Update whenever WASD event occurs as an optimization, else just recalculating per-tick.
 	int m_numRows;
 	int m_numCols;
-	unsigned int m_numConstraintSolverIterations;
+	unsigned int m_numConstraintSolverIterations; //Affects soggy: more is less sag.
 
 	//Ratios stored with class mostly for debugging. Or maybe use > these to tell when break a cloth constraint?
 	double m_baseDistanceBetweenParticles;

@@ -31,7 +31,7 @@ CONSOLE_COMMAND(resetCloth)
 {
 	UNUSED(args);
 	delete TheGame::instance->m_cloth;
-	TheGame::instance->m_cloth = new Cloth(TheGame::instance->s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt(2.f), 2.f);
+	TheGame::instance->m_cloth = new Cloth(TheGame::instance->s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 50, 50, 5, 1.f, sqrt(2.f), 2.f);
 }
 
 //-----------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ TheGame::TheGame()
 , m_camera(new Camera3D())
 , m_twahSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/Twah.wav"))
 , m_bgMusic(AudioSystem::instance->CreateOrGetSound("Data/SFX/battleTheme.mp3"))
-, m_cloth(new Cloth(s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 5, 5, 5, 1.f, sqrt(2.f), 2.f))
+, m_cloth(new Cloth(s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 50, 50, 5, 1.f, sqrt(2.f), 2.f))
 {
 	Console::instance->RunCommand("motd");
 	AudioSystem::instance->PlayLoopingSound(m_bgMusic); //There's no way to stop it c:
@@ -76,9 +76,13 @@ void TheGame::Update(float deltaTime)
 
 	m_cloth->Update( deltaTime );
 
-	if (InputSystem::instance->IsKeyDown('G'))
+	if ( InputSystem::instance->IsKeyDown( 'G' ) )
 	{
-		m_cloth->MoveClothByOffset(Vector3::UNIT_Z);
+		m_cloth->MoveClothByOffset( Vector3::UNIT_Z );
+	}
+	if ( InputSystem::instance->IsKeyDown( 'B' ) )
+	{
+		m_cloth->MoveClothByOffset( -Vector3::UNIT_Z );
 	}
 	if (InputSystem::instance->WasKeyJustPressed('T'))
 	{
