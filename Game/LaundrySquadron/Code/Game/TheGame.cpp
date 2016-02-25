@@ -76,11 +76,11 @@ void TheGame::Update(float deltaTime)
 
 	m_cloth->Update( deltaTime );
 
-	if ( InputSystem::instance->IsKeyDown( 'G' ) )
+	if ( InputSystem::instance->IsKeyDown( 'W' ) )
 	{
 		m_cloth->MoveClothByOffset( Vector3::UNIT_Z );
 	}
-	if ( InputSystem::instance->IsKeyDown( 'B' ) )
+	if ( InputSystem::instance->IsKeyDown( 'S' ) )
 	{
 		m_cloth->MoveClothByOffset( -Vector3::UNIT_Z );
 	}

@@ -321,7 +321,7 @@ public:
 			m_clothParticles.push_back( Particle( particleRenderType, particleMass, 1.f, particleRadius ) ); //Doesn't assign a dynamics state.
 				//Needs a positive secondsToLive or else expiration logic will say it's already invisible/dead.
 
-		AssignParticleStates( static_cast<float>( baseDistanceBetweenParticles ), originTopLeftPosition.z, initialGlobalVelocity );
+		AssignParticleStates( static_cast<float>( baseDistanceBetweenParticles ), originTopLeftPosition.y, initialGlobalVelocity );
 
 		AddConstraints( baseDistanceBetweenParticles, ratioDistanceStructuralToShear, ratioDistanceStructuralToBend );
 
@@ -343,7 +343,7 @@ public:
 	//-----------------------------------------------------------------------------------
 	void Update( float deltaSeconds )
 	{
-		float fixedTimeStep = .07f;
+		float fixedTimeStep = .001f;
 
 		for ( int particleIndex = 0; particleIndex < m_numRows * m_numCols; particleIndex++ )
 			if ( ( m_clothParticles[ particleIndex ].GetIsPinned() == false ) || m_clothParticles[ particleIndex ].IsExpired() ) //What happens if you add if ( isExpired() ) ?
@@ -397,9 +397,9 @@ public:
 					GetParticle( r + 1, c )->GetPosition( particleStateBottomLeft );
 					GetParticle( r + 1, c + 1 )->GetPosition( particleStateBottomRight );
 
-					Vector2 currentU = Vector2::UNIT_X - (Vector2::UNIT_X * (((float)(c + 1) / (float)(m_numCols - 1))));
+					Vector2 currentU = Vector2::UNIT_X + (Vector2::UNIT_X * (((float)(c + 1) / (float)(m_numCols - 1))));
 					Vector2 currentV = Vector2::UNIT_Y * ((float)r / (float)(m_numRows - 1));
-					Vector2 nextU = Vector2::UNIT_X - (Vector2::UNIT_X * (((float)c / (float)(m_numCols - 1))));
+					Vector2 nextU = Vector2::UNIT_X + (Vector2::UNIT_X * (((float)c / (float)(m_numCols - 1))));
 					Vector2 nextV = Vector2::UNIT_Y * ((float)(r + 1) / (float)(m_numRows - 1));
 					Vertex_PCT quad[ 4 ] =
 					{
@@ -471,7 +471,7 @@ private:
 		//FORCES ASSIGNED HERE RIGHT NOW:
 		LinearDynamicsState* lds = new LinearDynamicsState(); //Need its forces to stay valid over cloth lifetime, particle will handle cleanup.
 		m_particleTemplate.SetParticleState( lds );
-		m_particleTemplate.AddForce( new GravityForce( 0.01f, Vector3(0,0,-1) ) );
+		m_particleTemplate.AddForce( new GravityForce( 9.81f, Vector3(0,0,-1) ) );
 		//m_particleTemplate.AddForce( new SpringForce( 0, Vector3::ZERO, .72f, .72f ) );
 		//m_particleTemplate.AddForce( new ConstantWindForce( 1.f, WORLD_RIGHT ) );
 
@@ -479,7 +479,7 @@ private:
 		{
 			for ( int c = 0; c < m_numCols; c++ )
 			{
-				Vector3 startPosition(c * baseDistance, r * baseDistance, 0.0f);
+				Vector3 startPosition(c * baseDistance, 0.0f, r * baseDistance ); //BASIS CHANGE GOES HERE!
 				startPosition += m_currentTopLeftPosition;
 				Particle* const currentParticle = GetParticle( r, c );
 
@@ -574,15 +574,37 @@ private:
 					continue; //Skip solving for a step.
 				double currentDistance = currentDisplacement.CalculateMagnitude();
 
-				float stiffness = 20.f;
+				float stiffness = 50.f;
 				Vector3 halfCorrectionVector = currentDisplacement * stiffness * static_cast<float>( 0.5 * ( 1.0 - ( currentConstraint->restDistance / currentDistance ) ) );
 				// Note last term is ( currDist - currConstraint.restDist ) / currDist, just divided through.
 
 				norm += (currentConstraint->restDistance - currentDistance) * (currentConstraint->restDistance - currentDistance);
 
 				//Move p2 towards p1 (- along halfVec), p1 towards p2 (+ along halfVec).
-				currentConstraint->p1->Translate( halfCorrectionVector * deltaSeconds );
-				currentConstraint->p2->Translate( -halfCorrectionVector * deltaSeconds );
+				bool isPinnedParticle1 = currentConstraint->p1->GetIsPinned();
+				bool isPinnedParticle2 = currentConstraint->p2->GetIsPinned();
+
+// 				if ( isPinnedParticle1 && isPinnedParticle2 )
+// 				{
+// 					return; //Neither need correction.
+// 				}
+// 				if ( isPinnedParticle1 && !isPinnedParticle2 )
+// 				{
+// 					currentConstraint->p2->Translate( -halfCorrectionVector * 1.f * deltaSeconds ); //Have to cover the full correction with one particle.
+// 					return;
+// 				}
+// 				if ( !isPinnedParticle1 && isPinnedParticle2 )
+// 				{
+// 					currentConstraint->p1->Translate( halfCorrectionVector * 1.f * deltaSeconds ); //Have to cover the full correction with one particle.
+// 					return;
+// 				}
+
+				//Neither point is pinned, correct as normal.
+				if ( !isPinnedParticle1 )
+				currentConstraint->p1->Translate( halfCorrectionVector * ( isPinnedParticle2 ? 2.f : 1.f ) * deltaSeconds );
+				
+				if ( !isPinnedParticle2 )
+					currentConstraint->p2->Translate( -halfCorrectionVector * ( isPinnedParticle1 ? 2.f : 1.f ) *deltaSeconds );
 			}
 		}
 		DebuggerPrintf("Error: %f\n", norm);
