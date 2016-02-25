@@ -397,9 +397,9 @@ public:
 					GetParticle( r + 1, c )->GetPosition( particleStateBottomLeft );
 					GetParticle( r + 1, c + 1 )->GetPosition( particleStateBottomRight );
 
-					Vector2 currentU = Vector2::UNIT_X + (Vector2::UNIT_X * (((float)(c + 1) / (float)(m_numCols - 1))));
+					Vector2 currentU = Vector2::UNIT_X - (Vector2::UNIT_X * (((float)(c + 1) / (float)(m_numCols - 1))));
 					Vector2 currentV = Vector2::UNIT_Y * ((float)r / (float)(m_numRows - 1));
-					Vector2 nextU = Vector2::UNIT_X + (Vector2::UNIT_X * (((float)c / (float)(m_numCols - 1))));
+					Vector2 nextU = Vector2::UNIT_X - (Vector2::UNIT_X * (((float)c / (float)(m_numCols - 1))));
 					Vector2 nextV = Vector2::UNIT_Y * ((float)(r + 1) / (float)(m_numRows - 1));
 					Vertex_PCT quad[ 4 ] =
 					{
@@ -479,7 +479,7 @@ private:
 		{
 			for ( int c = 0; c < m_numCols; c++ )
 			{
-				Vector3 startPosition(c * baseDistance, 0.0f, r * baseDistance ); //BASIS CHANGE GOES HERE!
+				Vector3 startPosition(c * baseDistance, 0.0f, -r * baseDistance ); //BASIS CHANGE GOES HERE!
 				startPosition += m_currentTopLeftPosition;
 				Particle* const currentParticle = GetParticle( r, c );
 
