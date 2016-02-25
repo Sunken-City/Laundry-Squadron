@@ -56,6 +56,7 @@ public:
 	void EnableInvertedBlending();
 	void EnableDepthTest(bool enabled);
 	void EnableFaceCulling(bool enabled);
+	void DrawSexyOctohedron(const Vector3& center, float size, const RGBA& color);
 	void BindTexture(const Texture& texture);
 	void UnbindTexture();
 	void SetOrtho(const Vector2& bottomLeft, const Vector2& topRight);
@@ -84,8 +85,8 @@ public:
 	void DrawTexturedAABB3(const AABB3& bounds, const RGBA& color = RGBA::WHITE, const Vector2& texCoordMins = Vector2::ZERO, const Vector2& texCoordMaxs = Vector2::ONE, Texture* texture = nullptr);
 	void DrawTexturedAABB(const AABB2& bounds, const Vector2& texCoordMins, const Vector2& texCoordMaxs, Texture* texture = nullptr, const RGBA& color = RGBA::WHITE);
 	void DrawTexturedFace(const Face& face, const Vector2& texCoordMins, const Vector2& texCoordMaxs, Texture* texture = nullptr, const RGBA& color = RGBA::WHITE);
-	void DrawPolygonOutline(const Vector2& center, float radius, int numSides, float radianOffset, const RGBA& color = RGBA::WHITE);
-	void DrawPolygon(const Vector2& center, float radius, int numSides, float radianOffset, const RGBA& color = RGBA::WHITE);
+	void DrawPolygonOutline(const Vector3& center, float radius, int numSides, float radianOffset, const RGBA& color = RGBA::WHITE);
+	void DrawPolygon(const Vector3& center, float radius, int numSides, float radianOffset, const RGBA& color = RGBA::WHITE);
 	void DrawText2D(const Vector2& startBottomLeft, const std::string& asciiText, float cellWidth, float cellHeight, const RGBA& tint = RGBA::WHITE, bool drawShadow = false, const BitmapFont* font = nullptr);
 	void DrawText2D(const Vector2& position, const std::string& asciiText, float scale, const RGBA& tint = RGBA::WHITE, bool drawShadow = false, const BitmapFont* font = nullptr, const Vector2& right = Vector2::UNIT_X, const Vector2& up = Vector2::UNIT_Y);
 

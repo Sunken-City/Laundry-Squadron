@@ -23,6 +23,7 @@ public:
 	//MEMBER VARIABLES//////////////////////////////////////////////////////////////////////////
 	float m_mass;
 	float m_radius;
+	double m_birthday;
 	LinearDynamicsState m_state;
 	LinearDynamicsState m_prevState;
 	bool m_collided;

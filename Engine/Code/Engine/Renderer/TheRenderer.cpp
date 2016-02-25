@@ -804,7 +804,37 @@ void TheRenderer::EnableFaceCulling(bool enabled)
 }
 
 //-----------------------------------------------------------------------------------
-void TheRenderer::DrawPolygonOutline(const Vector2& center, float radius, int numSides, float radianOffset, const RGBA& color)
+void TheRenderer::DrawSexyOctohedron(const Vector3& center, float size, const RGBA& color)
+{
+	CHECK_RENDERER;
+	Vector3 p1 (0, 0, size );
+	Vector3 p2 (0, 0, -size );
+	Vector3 p3 (-size, -size, 0 );
+	Vector3 p4 (size, -size, 0 );
+	Vector3 p5 (size, size, 0 );
+	Vector3 p6 (-size,  size, 0 );
+	p1 += center;
+	p2 += center;
+	p3 += center;
+	p4 += center;
+	p5 += center;
+	p6 += center;
+	DrawLine(p1, p3, color, 2.0f);
+	DrawLine(p1, p4, color, 2.0f);
+	DrawLine(p1, p5, color, 2.0f);
+	DrawLine(p1, p6, color, 2.0f);
+	DrawLine(p2, p3, color, 2.0f);
+	DrawLine(p2, p4, color, 2.0f);
+	DrawLine(p2, p5, color, 2.0f);
+	DrawLine(p2, p6, color, 2.0f);
+	DrawLine(p3, p4, color, 2.0f);
+	DrawLine(p4, p5, color, 2.0f);
+	DrawLine(p5, p6, color, 2.0f);
+	DrawLine(p6, p3, color, 2.0f);
+}
+
+//-----------------------------------------------------------------------------------
+void TheRenderer::DrawPolygonOutline(const Vector3& center, float radius, int numSides, float radianOffset, const RGBA& color /*= RGBA::WHITE*/)
 {
 	CHECK_RENDERER;
 	Vertex_PCT* vertexes = new Vertex_PCT[numSides];
@@ -816,17 +846,16 @@ void TheRenderer::DrawPolygonOutline(const Vector2& center, float radius, int nu
 	{
 		float adjustedRadians = radians + radianOffset;
 		float x = center.x + (radius * cos(adjustedRadians));
-		float y = center.y + (radius * sin(adjustedRadians));
+		float z = center.z + (radius * sin(adjustedRadians));
 
 		vertexes[index].color = color;
-		vertexes[index].pos = Vector2(x, y);
+		vertexes[index].pos = Vector3(x, center.y, z);
 	}
 	DrawVertexArray(vertexes, numSides, LINE_LOOP);
-
 }
 
 //-----------------------------------------------------------------------------------
-void TheRenderer::DrawPolygon(const Vector2& center, float radius, int numSides, float radianOffset, const RGBA& color)
+void TheRenderer::DrawPolygon(const Vector3& center, float radius, int numSides, float radianOffset, const RGBA& color /*= RGBA::WHITE*/)
 {
 	CHECK_RENDERER;
 	Vertex_PCT* vertexes = new Vertex_PCT[numSides];

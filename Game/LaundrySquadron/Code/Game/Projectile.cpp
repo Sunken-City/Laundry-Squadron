@@ -11,6 +11,7 @@ Projectile::Projectile(float mass, float radius, LinearDynamicsState const &stat
 	, m_state(state)
 	, m_prevState(state)
 	, m_collided(false)
+	, m_birthday(GetCurrentTimeSeconds())
 {
 
 }
@@ -40,7 +41,7 @@ void Projectile::Update(float deltaSeconds)
 
 void Projectile::Render() const
 {
-	TheRenderer::instance->DrawUVSphere(m_state.GetPosition(), m_radius, 10);
+	TheRenderer::instance->DrawSexyOctohedron(m_state.GetPosition(), 1.0f, RGBA::VAPORWAVE);
 }
 
 //-------------------------------------------------------------------------------------------------

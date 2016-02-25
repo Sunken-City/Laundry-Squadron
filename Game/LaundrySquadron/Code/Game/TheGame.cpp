@@ -11,10 +11,12 @@
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Input/Console.hpp"
 #include "Engine/Core/StringUtils.hpp"
+#include "Engine/Time/Time.hpp"
 #include "Game/Physics.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #include<Windows.h>
+#include <algorithm>
 
 TheGame* TheGame::instance = nullptr;
 const Vector3 TheGame::s_clothStartingPosition = Vector3(144.f, 20.f, 98.f);
@@ -74,16 +76,16 @@ void TheGame::Update(float deltaTime)
 		MoveCloth(deltaTime);
 	}
 
-	m_cloth->Update( deltaTime );
+	m_cloth->Update(deltaTime);
 
-	if ( InputSystem::instance->IsKeyDown( 'W' ) )
-	{
-		m_cloth->MoveClothByOffset( Vector3::UNIT_Z );
-	}
-	if ( InputSystem::instance->IsKeyDown( 'S' ) )
-	{
-		m_cloth->MoveClothByOffset( -Vector3::UNIT_Z );
-	}
+	// 	if ( InputSystem::instance->IsKeyDown( 'W' ) )
+	// 	{
+	// 		m_cloth->MoveClothByOffset( Vector3::UNIT_Z );
+	// 	}
+	// 	if ( InputSystem::instance->IsKeyDown( 'S' ) )
+	// 	{
+	// 		m_cloth->MoveClothByOffset( -Vector3::UNIT_Z );
+	// 	}
 	if (InputSystem::instance->WasKeyJustPressed('T'))
 	{
 		m_projectiles.push_back(Projectile(1.0f, 1.0f, LinearDynamicsState(Vector3(144, 100, 98), -Vector3::UNIT_Y * 10.0f)));
@@ -94,22 +96,24 @@ void TheGame::Update(float deltaTime)
 		bullet.Update(deltaTime);
 
 		auto particleIterator = m_cloth->m_clothParticles.begin();
-		while (particleIterator != m_cloth->m_clothParticles.end()) 
+		while (particleIterator != m_cloth->m_clothParticles.end())
 		{
 			LinearDynamicsState* clothParticleState = (*particleIterator).m_state;
-			Projectile clothParticle (1.0f, 0.1f, LinearDynamicsState(clothParticleState->GetPosition(), clothParticleState->GetVelocity()));
+			Projectile clothParticle(1.0f, 0.1f, LinearDynamicsState(clothParticleState->GetPosition(), clothParticleState->GetVelocity()));
 			float collisionFactor = bullet.IsColliding(bullet, clothParticle);
-			if ( collisionFactor != -1.0f )
+			if (collisionFactor != -1.0f)
 			{
-// 				particleIterator = m_cloth->m_clothParticles.erase(particleIterator);
-				particleIterator->SetIsExpired( true );
+				// 				particleIterator = m_cloth->m_clothParticles.erase(particleIterator);
+				particleIterator->SetIsExpired(true);
 			}
-// 			else
-// 			{
-				++particleIterator;
-// 			}
-		}		
+			// 			else
+			// 			{
+			++particleIterator;
+			// 			}
+		}
+
 	}
+	m_projectiles.erase(std::remove_if(m_projectiles.begin(), m_projectiles.end(), [](Projectile& bullet) {return (bullet.m_collided || (GetCurrentTimeSeconds() - bullet.m_birthday) > 30.0f); }), m_projectiles.end());
 }
 
 //-----------------------------------------------------------------------------------
@@ -123,7 +127,7 @@ void TheGame::Render() const
 	TheRenderer::instance->DrawTexturedAABB(AABB2(Vector2(0.0f, 0.0f), Vector2(300.f, 300.f)), Vector2(1.0f, 1.0f), Vector2(0.0f, 0.0f), m_marthTexture, RGBA::WHITE);
 	RenderAxisLines();
 
-	m_cloth->Render(true, true, true);
+	m_cloth->Render(true, InputSystem::instance->IsKeyDown('C'), InputSystem::instance->IsKeyDown('C'));
 	for (const Projectile& bullet : m_projectiles)
 	{
 		bullet.Render();
@@ -153,24 +157,22 @@ void TheGame::MoveCloth(float deltaTime)
 	if (InputSystem::instance->IsKeyDown('D') || InputSystem::instance->IsKeyDown(InputSystem::ExtraKeys::RIGHT))
 	{
 		Vector3 cameraLeftXY = m_camera->GetLeftXY();
-		m_cloth->MoveClothByOffset(-cameraLeftXY * (moveSpeed * deltaTime));
-		Vector3 maxOffset = (s_clothStartingPosition + Vector3(12.0f, 0.0f, 0.0f));
-		if (m_cloth->GetTopLeftPosition().x > maxOffset.x)
+		Vector3 maxOffset = (m_cloth->GetOriginalTopLeftPosition() + Vector3(16.0f, 0.0f, 0.0f));
+		if (m_cloth->GetCurrentTopLeftPosition().x < maxOffset.x)
 		{
-			m_cloth->SetTopLeftPosition(maxOffset);
+			m_cloth->MoveClothByOffset(-cameraLeftXY * (moveSpeed * deltaTime));
 		}
 	}
 	if (InputSystem::instance->IsKeyDown('A') || InputSystem::instance->IsKeyDown(InputSystem::ExtraKeys::LEFT))
 	{
 		Vector3 cameraLeftXY = m_camera->GetLeftXY();
-		m_cloth->MoveClothByOffset(cameraLeftXY * (moveSpeed * deltaTime));
-		Vector3 maxOffset = (s_clothStartingPosition - Vector3(16.0f, 0.0f, 0.0f));
-		if (m_cloth->GetTopLeftPosition().x < maxOffset.x)
+		Vector3 maxOffset = (m_cloth->GetOriginalTopLeftPosition() - Vector3(16.0f, 0.0f, 0.0f));
+		if (m_cloth->GetCurrentTopLeftPosition().x > maxOffset.x)
 		{
-			m_cloth->SetTopLeftPosition(maxOffset);
+			m_cloth->MoveClothByOffset(cameraLeftXY * (moveSpeed * deltaTime));
 		}
 	}
-
+//	TheRenderer::instance->DrawText2D(Vector2(10, 10), Stringf("Current Top Left: %f %f %f", m_cloth->GetCurrentTopLeftPosition().x, m_cloth->GetCurrentTopLeftPosition().y, m_cloth->GetCurrentTopLeftPosition().z), 1.f);
 	InputSystem::instance->HideMouseCursor();
 }
 

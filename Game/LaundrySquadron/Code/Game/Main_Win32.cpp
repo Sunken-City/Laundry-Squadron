@@ -171,7 +171,7 @@ void Update()
 //-----------------------------------------------------------------------------------------------
 void Render()
 {
-	TheRenderer::instance->ClearScreen(0.3f, 0.3f, 0.3f);
+	TheRenderer::instance->ClearScreen(0.0f, 0.0f, 0.0f);
 	TheGame::instance->Render();
 	SwapBuffers(g_displayDeviceContext);
 }

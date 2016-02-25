@@ -296,6 +296,7 @@ struct ClothConstraint
 
 //-----------------------------------------------------------------------------
 class Cloth
+
 {
 public:
 	//CONTRUCTORS//////////////////////////////////////////////////////////////////////////
@@ -307,7 +308,8 @@ public:
 		   double ratioDistanceStructuralToShear,
 		   double ratioDistanceStructuralToBend,
 		   const Vector3& initialGlobalVelocity = Vector3::ZERO )
-		: m_currentTopLeftPosition( originTopLeftPosition )
+		: m_originalTopLeftPosition( originTopLeftPosition )
+		, m_currentTopLeftPosition( originTopLeftPosition )
 		, m_numRows( numRows )
 		, m_numCols( numCols )
 		, m_numConstraintSolverIterations( numConstraintSolverIterations )
@@ -449,14 +451,19 @@ public:
 			currentParticle->GetPosition(currentPosition);
 			currentParticle->SetPosition(currentPosition + offset);
 		}
-		m_currentTopLeftPosition += offset;
-		m_currentTopRightPosition += offset;
+		GetParticle(0, 0)->GetPosition(m_currentTopLeftPosition);
 	}
 	
 	//-----------------------------------------------------------------------------------
-	inline Vector3 GetTopLeftPosition()
+	inline Vector3 GetCurrentTopLeftPosition()
 	{
 		return m_currentTopLeftPosition;
+	}
+
+	//-----------------------------------------------------------------------------------
+	inline Vector3 GetOriginalTopLeftPosition()
+	{
+		return m_originalTopLeftPosition;
 	}
 
 	//-----------------------------------------------------------------------------------
@@ -574,7 +581,7 @@ private:
 					continue; //Skip solving for a step.
 				double currentDistance = currentDisplacement.CalculateMagnitude();
 
-				float stiffness = 50.f;
+				float stiffness = 100.f;
 				Vector3 halfCorrectionVector = currentDisplacement * stiffness * static_cast<float>( 0.5 * ( 1.0 - ( currentConstraint->restDistance / currentDistance ) ) );
 				// Note last term is ( currDist - currConstraint.restDist ) / currDist, just divided through.
 
@@ -612,6 +619,7 @@ private:
 
 	//MEMBER VARIABLES//////////////////////////////////////////////////////////////////////////
 	Particle m_particleTemplate; //Without this and CloneForces, adding forces will crash when they go out of scope.
+	Vector3 m_originalTopLeftPosition;
 	Vector3 m_currentTopLeftPosition; //m_clothParticles[0,0].position: MOVE THIS WITH WASD TO MOVE PINNED CORNERS!
 	Vector3 m_currentTopRightPosition; //Update whenever WASD event occurs as an optimization, else just recalculating per-tick.
 	int m_numRows;
