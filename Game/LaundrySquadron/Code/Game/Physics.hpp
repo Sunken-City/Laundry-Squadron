@@ -178,6 +178,7 @@ public:
 		, m_renderType( renderType )
 		, m_renderRadius( renderRadius )
 		, m_state( nullptr )
+		, m_isPinned( false )
 	{
 	}
 	~Particle();
@@ -192,15 +193,23 @@ public:
 	void AddForce( Force* newForce );
 	void CloneForcesFromParticle( const Particle* sourceParticle );				
 	
-	//Bool indicates failure when particle has no m_state.
+	//The return bool value indicates failure <=> particle has no m_state.
 	bool GetPosition( Vector3& out_position );
 	bool SetPosition( const Vector3& newPosition );
 	bool Translate( const Vector3& newPosition );
 	bool GetVelocity( Vector3& out_velocity );
 	bool SetVelocity( const Vector3& newVelocity );
 
+	bool GetIsPinned() const { return m_isPinned; }
+	void SetIsPinned( bool newVal ) { m_isPinned = newVal; }
+	void ToggleIsPinned() { m_isPinned = !m_isPinned; }
+
 	LinearDynamicsState* m_state;
+
+
 private:
+
+	bool m_isPinned;
 
 	float m_mass;
 	float m_secondsToLive;
@@ -315,6 +324,9 @@ public:
 		AssignParticleStates( static_cast<float>( baseDistanceBetweenParticles ), originTopLeftPosition.z, initialGlobalVelocity );
 
 		AddConstraints( baseDistanceBetweenParticles, ratioDistanceStructuralToShear, ratioDistanceStructuralToBend );
+
+		GetParticle( 0, 0 )->SetIsPinned( true );
+		GetParticle( 0, numCols - 1 )->SetIsPinned( true );
 	}
 	~Cloth() { for ( ClothConstraint* cc : m_clothConstraints ) delete cc; }
 
@@ -331,10 +343,11 @@ public:
 	//-----------------------------------------------------------------------------------
 	void Update( float deltaSeconds )
 	{
-		float fixedTimeStep = .05f;
+		float fixedTimeStep = .07f;
 
 		for ( int particleIndex = 0; particleIndex < m_numRows * m_numCols; particleIndex++ )
-			m_clothParticles[ particleIndex ].StepAndAge( fixedTimeStep );
+			if ( ( m_clothParticles[ particleIndex ].GetIsPinned() == false ) || m_clothParticles[ particleIndex ].IsExpired() ) //What happens if you add if ( isExpired() ) ?
+				m_clothParticles[ particleIndex ].StepAndAge( fixedTimeStep );
 
 		//In future could remove this to a RemoveConstraintForParticle(Particle* p) that finds and erases all constraints referencing p, to not loop per frame.
 		for ( auto constraintIter = m_clothConstraints.begin(); constraintIter != m_clothConstraints.end(); )
@@ -352,11 +365,12 @@ public:
 
 		SatisfyConstraints( fixedTimeStep );
 
-		//Pins the corners.
-		if ( GetParticle( 0, 0 )->IsExpired() == false )
-			GetParticle( 0, 0 )->SetPosition( m_currentTopLeftPosition );
-		if ( GetParticle( 0, m_numCols - 1 )->IsExpired() == false )
-			GetParticle( 0, m_numCols - 1 )->SetPosition( CalcTopRightPosFromTopLeft() );
+		//Old way of pinning the corners. Now handled by Particle::m_isPinned member to let you pin things arbitrarily.
+
+//		if ( GetParticle( 0, 0 )->IsExpired() == false )
+//			GetParticle( 0, 0 )->SetPosition( m_currentTopLeftPosition );
+//		if ( GetParticle( 0, m_numCols - 1 )->IsExpired() == false )
+//			GetParticle( 0, m_numCols - 1 )->SetPosition( CalcTopRightPosFromTopLeft() );
 	}
 
 	//-----------------------------------------------------------------------------------
@@ -457,7 +471,7 @@ private:
 		//FORCES ASSIGNED HERE RIGHT NOW:
 		LinearDynamicsState* lds = new LinearDynamicsState(); //Need its forces to stay valid over cloth lifetime, particle will handle cleanup.
 		m_particleTemplate.SetParticleState( lds );
-		m_particleTemplate.AddForce( new GravityForce( 0.1f, Vector3(0,0,-1) ) );
+		m_particleTemplate.AddForce( new GravityForce( 0.01f, Vector3(0,0,-1) ) );
 		//m_particleTemplate.AddForce( new SpringForce( 0, Vector3::ZERO, .72f, .72f ) );
 		//m_particleTemplate.AddForce( new ConstantWindForce( 1.f, WORLD_RIGHT ) );
 

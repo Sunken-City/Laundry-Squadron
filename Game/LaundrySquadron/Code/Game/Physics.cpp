@@ -45,6 +45,8 @@ void Particle::Render()
 //--------------------------------------------------------------------------------------------------------------
 void Particle::StepAndAge( float deltaSeconds )
 {
+	//Commented out because the expire-after-x-seconds logic is not needed for the cloth simulation.
+
 //	m_state->StepWithForwardEuler( m_mass, deltaSeconds );
 	m_state->StepWithVerlet( m_mass, deltaSeconds );
 //	m_secondsToLive -= deltaSeconds;
