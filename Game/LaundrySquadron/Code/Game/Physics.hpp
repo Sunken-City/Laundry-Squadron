@@ -343,6 +343,24 @@ public:
 	}
 
 	//-----------------------------------------------------------------------------------
+	bool IsDead() //Returns whether the corners still exist.
+	{
+		return GetParticle( 0, 0 )->IsExpired() && GetParticle( 0, m_numCols - 1 )->IsExpired();
+	}
+
+	//-----------------------------------------------------------------------------------
+	float GetPercentageConstraintsLeft()
+	{
+		return static_cast<float>( GetNumConstraints() ) / static_cast<float>( m_originalNumConstraints );
+	}
+
+	//-----------------------------------------------------------------------------------
+	int GetNumConstraints()
+	{
+		return static_cast<int>( m_clothConstraints.size() );
+	}
+
+	//-----------------------------------------------------------------------------------
 	void Update( float deltaSeconds )
 	{
 		float fixedTimeStep = .001f;
@@ -480,7 +498,7 @@ private:
 		m_particleTemplate.SetParticleState( lds );
 		m_particleTemplate.AddForce( new GravityForce( 9.81f, Vector3(0,0,-1) ) );
 		//m_particleTemplate.AddForce( new SpringForce( 0, Vector3::ZERO, .72f, .72f ) );
-		//m_particleTemplate.AddForce( new ConstantWindForce( 1.f, WORLD_RIGHT ) );
+		//m_particleTemplate.AddForce( new ConstantWindForce( 30.f, Vector3::UP ) );
 
 		for ( int r = 0; r < m_numRows; r++ )
 		{
@@ -557,6 +575,8 @@ private:
 		//Now that we know it's duplicate-free, store in the vector to get the ability to index.
 		for ( ClothConstraint* cc : tmpSet )
 			m_clothConstraints.push_back( cc );
+
+		m_originalNumConstraints = m_clothConstraints.size();
 	}
 
 	//-----------------------------------------------------------------------------------
@@ -625,6 +645,7 @@ private:
 	int m_numRows;
 	int m_numCols;
 	unsigned int m_numConstraintSolverIterations; //Affects soggy: more is less sag.
+	unsigned int m_originalNumConstraints;
 
 	//Ratios stored with class mostly for debugging. Or maybe use > these to tell when break a cloth constraint?
 	double m_baseDistanceBetweenParticles;
