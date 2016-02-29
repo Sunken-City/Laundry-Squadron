@@ -282,7 +282,7 @@ private:
 
 
 //-----------------------------------------------------------------------------
-enum ConstraintType { STRETCH, SHEAR, BEND };
+enum ConstraintType { STRETCH, SHEAR, BEND, NUM_CONSTRAINT_TYPES };
 struct ClothConstraint
 {
 	ConstraintType type;
@@ -349,15 +349,24 @@ public:
 	}
 
 	//-----------------------------------------------------------------------------------
-	float GetPercentageConstraintsLeft()
+	float GetPercentageConstraintsLeft( ConstraintType constraintType = NUM_CONSTRAINT_TYPES )
 	{
-		return static_cast<float>( GetNumConstraints() ) / static_cast<float>( m_originalNumConstraints );
+		return static_cast<float>( GetNumConstraints( constraintType ) ) / static_cast<float>( m_originalNumConstraints );
 	}
 
 	//-----------------------------------------------------------------------------------
-	int GetNumConstraints()
+	int GetNumConstraints( ConstraintType constraintType = NUM_CONSTRAINT_TYPES )
 	{
-		return static_cast<int>( m_clothConstraints.size() );
+		if ( constraintType == NUM_CONSTRAINT_TYPES )
+			return static_cast<int>( m_clothConstraints.size() );
+
+		int typeCount = 0;
+		for ( ClothConstraint* cc : m_clothConstraints )
+		{
+			if ( constraintType == cc->type )
+				++typeCount;
+		}
+		return typeCount;
 	}
 
 	//-----------------------------------------------------------------------------------
