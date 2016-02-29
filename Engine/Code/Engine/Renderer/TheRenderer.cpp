@@ -804,7 +804,7 @@ void TheRenderer::EnableFaceCulling(bool enabled)
 }
 
 //-----------------------------------------------------------------------------------
-void TheRenderer::DrawSexyOctohedron(const Vector3& center, float size, const RGBA& color)
+void TheRenderer::DrawSexyOctohedron(const Vector3& center, float size, const RGBA& color, float lineSize)
 {
 	CHECK_RENDERER;
 	Vector3 p1 (0, 0, size );
@@ -819,18 +819,18 @@ void TheRenderer::DrawSexyOctohedron(const Vector3& center, float size, const RG
 	p4 += center;
 	p5 += center;
 	p6 += center;
-	DrawLine(p1, p3, color, 2.0f);
-	DrawLine(p1, p4, color, 2.0f);
-	DrawLine(p1, p5, color, 2.0f);
-	DrawLine(p1, p6, color, 2.0f);
-	DrawLine(p2, p3, color, 2.0f);
-	DrawLine(p2, p4, color, 2.0f);
-	DrawLine(p2, p5, color, 2.0f);
-	DrawLine(p2, p6, color, 2.0f);
-	DrawLine(p3, p4, color, 2.0f);
-	DrawLine(p4, p5, color, 2.0f);
-	DrawLine(p5, p6, color, 2.0f);
-	DrawLine(p6, p3, color, 2.0f);
+	DrawLine(p1, p3, color, lineSize);
+	DrawLine(p1, p4, color, lineSize);
+	DrawLine(p1, p5, color, lineSize);
+	DrawLine(p1, p6, color, lineSize);
+	DrawLine(p2, p3, color, lineSize);
+	DrawLine(p2, p4, color, lineSize);
+	DrawLine(p2, p5, color, lineSize);
+	DrawLine(p2, p6, color, lineSize);
+	DrawLine(p3, p4, color, lineSize);
+	DrawLine(p4, p5, color, lineSize);
+	DrawLine(p5, p6, color, lineSize);
+	DrawLine(p6, p3, color, lineSize);
 }
 
 //-----------------------------------------------------------------------------------

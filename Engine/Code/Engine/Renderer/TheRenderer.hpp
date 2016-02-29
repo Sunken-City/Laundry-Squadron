@@ -56,7 +56,7 @@ public:
 	void EnableInvertedBlending();
 	void EnableDepthTest(bool enabled);
 	void EnableFaceCulling(bool enabled);
-	void DrawSexyOctohedron(const Vector3& center, float size, const RGBA& color);
+	void DrawSexyOctohedron(const Vector3& center, float size, const RGBA& color, float lineSize);
 	void BindTexture(const Texture& texture);
 	void UnbindTexture();
 	void SetOrtho(const Vector2& bottomLeft, const Vector2& topRight);

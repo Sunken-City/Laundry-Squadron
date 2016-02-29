@@ -41,7 +41,10 @@ void Projectile::Update(float deltaSeconds)
 
 void Projectile::Render() const
 {
-	TheRenderer::instance->DrawSexyOctohedron(m_state.GetPosition(), 1.0f, RGBA::VAPORWAVE);
+	TheRenderer::instance->EnableDepthTest(true);
+	TheRenderer::instance->DrawSexyOctohedron(m_state.GetPosition(), 0.5f, RGBA::VAPORWAVE, 3.0f);
+	TheRenderer::instance->EnableDepthTest(false);
+	TheRenderer::instance->DrawSexyOctohedron(m_state.GetPosition(), 0.5f, RGBA::VAPORWAVE, 1.0f);
 }
 
 //-------------------------------------------------------------------------------------------------
