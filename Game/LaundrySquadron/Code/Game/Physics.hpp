@@ -100,13 +100,15 @@ struct ConstantWindForce : public Force // -c*(v - w)
 //-----------------------------------------------------------------------------
 struct WormholeForce : public Force // -c*(v - w(pos))
 {
-	WormholeForce( float magnitude, Vector3 direction, float dampedness = 1.0f ) 
+	WormholeForce( Vector3 center, float magnitude, Vector3 direction, float dampedness = 1.0f ) 
 		: Force( magnitude, direction )
 		, m_dampedness( dampedness ) 
+		, m_center( center )
 	{
 	}
 
 	float m_dampedness; //"c".
+	Vector3 m_center;
 	
 	//Overriding to make wind = wind(pos).
 	float CalcMagnitudeForState( const LinearDynamicsState* lds ) const override; //Further from origin you move == stronger the wind.
@@ -528,9 +530,10 @@ private:
 		m_particleTemplate.SetParticleState( lds );	
 		//TheGame::instance->m_cloth->ResetForces( true );
 		//TheGame::instance->m_cloth->AddForce( new ConstantWindForce( 5000.f, Vector3::UP ) );
-		m_particleTemplate.AddForce( new GravityForce( 9.81f, Vector3(0,0,-1) ) );
+		//m_particleTemplate.AddForce( new GravityForce( 9.81f, Vector3(0,0,-1) ) );
 		//m_particleTemplate.AddForce( new SpringForce( 0, Vector3::ZERO, .72f, .72f ) );
-		m_particleTemplate.AddForce( new ConstantWindForce( 30.f, Vector3::UP ) );
+		//m_particleTemplate.AddForce( new ConstantWindForce( 30.f, Vector3::UP ) );
+		m_particleTemplate.AddForce( new WormholeForce( m_currentTopLeftPosition, 2.f, Vector3::ONE ) );
 
 		for ( int r = 0; r < m_numRows; r++ )
 		{

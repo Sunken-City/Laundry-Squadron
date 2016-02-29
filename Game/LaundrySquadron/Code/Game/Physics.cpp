@@ -252,7 +252,7 @@ float WormholeForce::CalcMagnitudeForState( const LinearDynamicsState * lds ) co
 //--------------------------------------------------------------------------------------------------------------
 Vector3 WormholeForce::CalcDirectionForState( const LinearDynamicsState * lds ) const
 {
-	return Vector3::ZERO - lds->GetPosition(); //MAGIC: Direction sends you back toward origin.
+	return m_center - lds->GetPosition(); //MAGIC: Direction sends you back toward m_center.
 }
 
 
