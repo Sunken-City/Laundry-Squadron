@@ -154,7 +154,7 @@ public:
 	void SetVelocity( const Vector3& newVel ) { m_velocity = newVel; }
 	void AddForce( Force* newForce ) { m_forces.push_back( newForce ); }
 	void GetForces( std::vector< Force* >& out_forces ) { out_forces = m_forces; }
-
+	void ClearForces( bool keepGravity = true );
 
 private:
 
@@ -190,6 +190,7 @@ public:
 	void SetIsExpired( bool newVal ) { m_secondsToLive = newVal ? -1.f : 1.f; }
 	bool IsExpired() const { return m_secondsToLive <= 0.f; }
 	void GetForces( std::vector< Force* >& out_forces ) const;
+	void ResetForces( bool keepGravity = true ) { m_state->ClearForces( keepGravity ); }
 	void AddForce( Force* newForce );
 	void CloneForcesFromParticle( const Particle* sourceParticle );				
 	
@@ -382,7 +383,7 @@ public:
 		for ( auto constraintIter = m_clothConstraints.begin(); constraintIter != m_clothConstraints.end(); )
 		{
 			ClothConstraint* cc = *constraintIter;
-			if ( cc->p1->IsExpired() && cc->p2->IsExpired() )
+			if ( cc->p1->IsExpired() && cc->p2->IsExpired() ) // Tried to do || instead, creates awkward stretching...
 			{
 				constraintIter = m_clothConstraints.erase( constraintIter );
 			}
@@ -498,16 +499,38 @@ public:
 	{
 		m_currentTopLeftPosition = offset;
 	}
+
+	//-----------------------------------------------------------------------------------
+	void ResetForces( bool keepGravity = true )
+	{
+		for ( Particle& p : m_clothParticles )
+		{
+			p.ResetForces( keepGravity );
+		}
+	}
+	
+	//-----------------------------------------------------------------------------------
+	void AddForce( Force* force )
+	{
+		Particle templateParticle = Particle( PARTICLE_AABB3, 1.f, -1.f, 1.f );
+		templateParticle.AddForce( force );
+		
+		for ( Particle& p : m_clothParticles )
+			p.CloneForcesFromParticle( &templateParticle );
+	}
+
 private:
 	//-----------------------------------------------------------------------------------
 	void AssignParticleStates( float baseDistance, float nonPlanarDepth, const Vector3& velocity = Vector3::ZERO ) //Note: 0,0 == top-left, so +x is right, +y is down.
 	{
 		//FORCES ASSIGNED HERE RIGHT NOW:
 		LinearDynamicsState* lds = new LinearDynamicsState(); //Need its forces to stay valid over cloth lifetime, particle will handle cleanup.
-		m_particleTemplate.SetParticleState( lds );
+		m_particleTemplate.SetParticleState( lds );	
+		//TheGame::instance->m_cloth->ResetForces( true );
+		//TheGame::instance->m_cloth->AddForce( new ConstantWindForce( 5000.f, Vector3::UP ) );
 		m_particleTemplate.AddForce( new GravityForce( 9.81f, Vector3(0,0,-1) ) );
 		//m_particleTemplate.AddForce( new SpringForce( 0, Vector3::ZERO, .72f, .72f ) );
-		//m_particleTemplate.AddForce( new ConstantWindForce( 30.f, Vector3::UP ) );
+		m_particleTemplate.AddForce( new ConstantWindForce( 30.f, Vector3::UP ) );
 
 		for ( int r = 0; r < m_numRows; r++ )
 		{

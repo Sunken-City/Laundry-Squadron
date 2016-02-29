@@ -70,7 +70,7 @@ void Particle::AddForce( Force* newForce )
 
 
 //--------------------------------------------------------------------------------------------------------------
-void Particle::CloneForcesFromParticle( const Particle * sourceParticle )
+void Particle::CloneForcesFromParticle( const Particle* sourceParticle )
 {
 	if ( m_state == nullptr ) return;
 
@@ -199,6 +199,31 @@ Vector3 LinearDynamicsState::CalcNetForceForMass( float mass ) const
 
 	return netForce;
 }
+
+
+//--------------------------------------------------------------------------------------------------------------
+void LinearDynamicsState::ClearForces( bool keepGravity /*= true*/ )
+{
+	for ( auto forceIter = m_forces.begin(); forceIter != m_forces.end(); )
+	{
+		Force* currentForce = *forceIter;
+		if ( keepGravity && ( dynamic_cast<GravityForce*>( currentForce ) != nullptr ) )
+		{
+			++forceIter;
+			continue;
+		}
+
+		if ( currentForce != nullptr )
+		{
+			delete currentForce;
+			currentForce = nullptr;
+			forceIter = m_forces.erase( forceIter );
+		}
+		else ++forceIter;
+	}
+	m_forces.clear();
+}
+
 
 //--------------------------------------------------------------------------------------------------------------
 Vector3 GravityForce::CalcForceForStateAndMass( const LinearDynamicsState * lds, float mass ) const
