@@ -41,10 +41,12 @@ void Projectile::Update(float deltaSeconds)
 
 void Projectile::Render() const
 {
+	RGBA color = (m_state.GetPosition().y < 30.0f) ? RGBA::YELLOW : RGBA::GREEN;
+	RGBA xrayColor = (m_state.GetPosition().y < 30.0f) ? RGBA::RED : RGBA::GREEN;
 	TheRenderer::instance->EnableDepthTest(true);
-	TheRenderer::instance->DrawSexyOctohedron(m_state.GetPosition(), 0.5f, RGBA::VAPORWAVE, 3.0f);
+	TheRenderer::instance->DrawSexyOctohedron(m_state.GetPosition(), 0.5f, color, 3.0f);
 	TheRenderer::instance->EnableDepthTest(false);
-	TheRenderer::instance->DrawSexyOctohedron(m_state.GetPosition(), 0.5f, RGBA::VAPORWAVE, 1.0f);
+	TheRenderer::instance->DrawSexyOctohedron(m_state.GetPosition(), 0.5f, xrayColor, 1.0f);
 }
 
 //-------------------------------------------------------------------------------------------------

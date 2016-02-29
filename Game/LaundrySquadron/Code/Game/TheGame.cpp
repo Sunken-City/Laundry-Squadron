@@ -20,7 +20,7 @@
 #include <algorithm>
 
 TheGame* TheGame::instance = nullptr;
-const Vector3 TheGame::s_clothStartingPosition = Vector3(144.f, 20.f, 98.f);
+const Vector3 TheGame::s_clothStartingPosition = Vector3(140.f, 20.f, 100.f);
 
 //-----------------------------------------------------------------------------------
 CONSOLE_COMMAND(twah)
@@ -35,19 +35,27 @@ CONSOLE_COMMAND(resetCloth)
 	UNUSED(args);
 	delete TheGame::instance->m_cloth;
 	TheGame::instance->m_cloth = new Cloth(TheGame::instance->s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 10, 10, 5, 1.f, sqrt(2.f), 2.f);
+	AudioSystem::instance->PlaySound(TheGame::instance->m_startSFX);
 }
 
 //-----------------------------------------------------------------------------------
 TheGame::TheGame()
 : m_marthTexture(Texture::CreateOrGetTexture("Data/Images/Test.png"))
 , m_camera(new Camera3D())
-, m_twahSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/Twah.wav"))
+, m_twahSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/twah.wav"))
+, m_startSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/start.wav"))
 , m_bgMusic(AudioSystem::instance->CreateOrGetSound("Data/SFX/battleTheme.mp3"))
 , m_cloth(new Cloth(s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 10, 10, 5, 1.f, sqrt(2.f), 2.f))
 , m_timeSinceLastParticle(0.0f)
 {
+	m_hurtSounds[0] = AudioSystem::instance->CreateOrGetSound("Data/SFX/hurt0.wav");
+	m_hurtSounds[1] = AudioSystem::instance->CreateOrGetSound("Data/SFX/hurt1.wav");
+	m_hurtSounds[2] = AudioSystem::instance->CreateOrGetSound("Data/SFX/hurt2.wav");
+	m_hurtSounds[3] = AudioSystem::instance->CreateOrGetSound("Data/SFX/hurt3.wav");
+	m_hurtSounds[4] = AudioSystem::instance->CreateOrGetSound("Data/SFX/hurt4.wav");
 	Console::instance->RunCommand("motd");
 	AudioSystem::instance->PlayLoopingSound(m_bgMusic); //There's no way to stop it c:
+	AudioSystem::instance->PlaySound(m_startSFX);
 }
 
 //-----------------------------------------------------------------------------------
@@ -69,7 +77,10 @@ void TheGame::Update(float deltaTime)
 	{
 		return; //Don't do anything involving input updates.
 	}
-
+	if (InputSystem::instance->WasKeyJustPressed('G'))
+	{
+		Console::instance->RunCommand("resetCloth");
+	}
 	if (InputSystem::instance->IsKeyDown('Q'))
 	{
 		UpdateCamera(deltaTime);
@@ -88,12 +99,13 @@ void TheGame::Update(float deltaTime)
 		const Vector3 BASE_VELOCITY = -Vector3::UNIT_Y * 10.0f;
 		Vector3 velocity = BASE_VELOCITY;
 		velocity += (Vector3::UNIT_X * MathUtils::GetRandom(-1.5f, 1.5f));
-		velocity += (Vector3::UNIT_Z * MathUtils::GetRandom(-0.5f, 0.5f));
-		m_projectiles.push_back(Projectile(1.0f, 1.0f, LinearDynamicsState(Vector3(144, 100, 98), velocity)));
+		velocity += (Vector3::UNIT_Z * MathUtils::GetRandom(-0.7f, 0.7f));
+		m_projectiles.push_back(Projectile(1.0f, 0.5f, LinearDynamicsState(Vector3(144, 100, 96), velocity)));
 		m_timeSinceLastParticle = 0.0f;
 		m_numParticlesSpawned += 1;
 	}
 
+	bool gotHit = false;
 	for (Projectile& bullet : m_projectiles)
 	{
 		bullet.Update(deltaTime);
@@ -107,12 +119,17 @@ void TheGame::Update(float deltaTime)
 			if (collisionFactor != -1.0f)
 			{
 				particleIterator->SetIsExpired(true);
+				gotHit = true;
 			}
 			++particleIterator;
 		}
 
 	}
-	m_projectiles.erase(std::remove_if(m_projectiles.begin(), m_projectiles.end(), [](Projectile& bullet) {return (bullet.m_collided || (GetCurrentTimeSeconds() - bullet.m_birthday) > 30.0f); }), m_projectiles.end());
+	if (gotHit)
+	{
+		AudioSystem::instance->PlaySound(m_hurtSounds[MathUtils::GetRandom(0, 5)]);
+	}
+	m_projectiles.erase(std::remove_if(m_projectiles.begin(), m_projectiles.end(), [](Projectile& bullet) {return (bullet.m_collided || (GetCurrentTimeSeconds() - bullet.m_birthday) > 15.0f); }), m_projectiles.end());
 }
 
 //-----------------------------------------------------------------------------------
