@@ -12,6 +12,7 @@
 #include "Engine/Input/Console.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Time/Time.hpp"
+#include "Engine/Math/Noise.hpp"
 #include "Game/Physics.hpp"
 
 #define WIN32_LEAN_AND_MEAN
@@ -43,6 +44,7 @@ TheGame::TheGame()
 , m_twahSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/Twah.wav"))
 , m_bgMusic(AudioSystem::instance->CreateOrGetSound("Data/SFX/battleTheme.mp3"))
 , m_cloth(new Cloth(s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 10, 10, 5, 1.f, sqrt(2.f), 2.f))
+, m_timeSinceLastParticle(0.0f)
 {
 	Console::instance->RunCommand("motd");
 	AudioSystem::instance->PlayLoopingSound(m_bgMusic); //There's no way to stop it c:
@@ -57,6 +59,7 @@ TheGame::~TheGame()
 //-----------------------------------------------------------------------------------
 void TheGame::Update(float deltaTime)
 {
+	m_timeSinceLastParticle += deltaTime;
 	if (InputSystem::instance->WasKeyJustPressed(InputSystem::ExtraKeys::TILDE))
 	{
 		Console::instance->ActivateConsole();
@@ -78,17 +81,17 @@ void TheGame::Update(float deltaTime)
 
 	m_cloth->Update(deltaTime);
 
-	// 	if ( InputSystem::instance->IsKeyDown( 'W' ) )
-	// 	{
-	// 		m_cloth->MoveClothByOffset( Vector3::UNIT_Z );
-	// 	}
-	// 	if ( InputSystem::instance->IsKeyDown( 'S' ) )
-	// 	{
-	// 		m_cloth->MoveClothByOffset( -Vector3::UNIT_Z );
-	// 	}
-	if (InputSystem::instance->WasKeyJustPressed('T'))
+	float timeForNextParticle = GetPseudoRandomNoise1D(m_numParticlesSpawned / 10);
+	timeForNextParticle = MathUtils::RangeMap(timeForNextParticle, 0.0f, 1.0f, 0.0f, 2.0f);
+	if (m_timeSinceLastParticle > timeForNextParticle)
 	{
-		m_projectiles.push_back(Projectile(1.0f, 1.0f, LinearDynamicsState(Vector3(144, 100, 98), -Vector3::UNIT_Y * 10.0f)));
+		const Vector3 BASE_VELOCITY = -Vector3::UNIT_Y * 10.0f;
+		Vector3 velocity = BASE_VELOCITY;
+		velocity += (Vector3::UNIT_X * MathUtils::GetRandom(-1.5f, 1.5f));
+		velocity += (Vector3::UNIT_Z * MathUtils::GetRandom(-0.5f, 0.5f));
+		m_projectiles.push_back(Projectile(1.0f, 1.0f, LinearDynamicsState(Vector3(144, 100, 98), velocity)));
+		m_timeSinceLastParticle = 0.0f;
+		m_numParticlesSpawned += 1;
 	}
 
 	for (Projectile& bullet : m_projectiles)
@@ -103,13 +106,9 @@ void TheGame::Update(float deltaTime)
 			float collisionFactor = bullet.IsColliding(bullet, clothParticle);
 			if (collisionFactor != -1.0f)
 			{
-				// 				particleIterator = m_cloth->m_clothParticles.erase(particleIterator);
 				particleIterator->SetIsExpired(true);
 			}
-			// 			else
-			// 			{
 			++particleIterator;
-			// 			}
 		}
 
 	}

@@ -37,4 +37,6 @@ public:
 private:
 	RGBA* m_color;
 	Camera3D* m_camera;
+	float m_timeSinceLastParticle;
+	int m_numParticlesSpawned;
 };
