@@ -30,6 +30,8 @@ public:
 
 	//MEMBER VARIABLES////////////////////////////////////////////////////////////////////////////
 	SoundID m_twahSFX;
+	SoundID m_startSFX;
+	SoundID m_hurtSounds[5];
 	SoundID m_bgMusic;
 	Cloth* m_cloth;
 	Texture* m_marthTexture;
