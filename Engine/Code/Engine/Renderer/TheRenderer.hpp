@@ -168,7 +168,7 @@ public:
 
 	//MEMBER VARIABLES//////////////////////////////////////////////////////////////////////////
 	static TheRenderer* instance;
+	Texture* m_defaultTexture;
 private:
 	BitmapFont* m_defaultFont;
-	Texture* m_defaultTexture;
 };

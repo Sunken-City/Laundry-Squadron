@@ -13,6 +13,7 @@
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Time/Time.hpp"
 #include "Engine/Math/Noise.hpp"
+#include "Engine/Renderer/BitmapFont.hpp"
 #include "Game/Physics.hpp"
 
 #define WIN32_LEAN_AND_MEAN
@@ -36,6 +37,7 @@ CONSOLE_COMMAND(resetCloth)
 	delete TheGame::instance->m_cloth;
 	TheGame::instance->m_cloth = new Cloth(TheGame::instance->s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 10, 10, 5, 1.f, sqrt(2.f), 2.f);
 	AudioSystem::instance->PlaySound(TheGame::instance->m_startSFX);
+	TheGame::instance->m_gameOver = false;
 }
 
 //-----------------------------------------------------------------------------------
@@ -44,9 +46,11 @@ TheGame::TheGame()
 , m_camera(new Camera3D())
 , m_twahSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/twah.wav"))
 , m_startSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/start.wav"))
+, m_deathSFX(AudioSystem::instance->CreateOrGetSound("Data/SFX/death.wav"))
 , m_bgMusic(AudioSystem::instance->CreateOrGetSound("Data/SFX/battleTheme.mp3"))
 , m_cloth(new Cloth(s_clothStartingPosition, PARTICLE_AABB3, 1.f, .01f, 10, 10, 5, 1.f, sqrt(2.f), 2.f))
 , m_timeSinceLastParticle(0.0f)
+, m_gameOver(false)
 {
 	m_hurtSounds[0] = AudioSystem::instance->CreateOrGetSound("Data/SFX/hurt0.wav");
 	m_hurtSounds[1] = AudioSystem::instance->CreateOrGetSound("Data/SFX/hurt1.wav");
@@ -67,7 +71,6 @@ TheGame::~TheGame()
 //-----------------------------------------------------------------------------------
 void TheGame::Update(float deltaTime)
 {
-	m_timeSinceLastParticle += deltaTime;
 	if (InputSystem::instance->WasKeyJustPressed(InputSystem::ExtraKeys::TILDE))
 	{
 		Console::instance->ActivateConsole();
@@ -81,25 +84,30 @@ void TheGame::Update(float deltaTime)
 	{
 		Console::instance->RunCommand("resetCloth");
 	}
+	m_timeSinceLastParticle += deltaTime;
 	if (InputSystem::instance->IsKeyDown('Q'))
 	{
 		UpdateCamera(deltaTime);
 	}
-	else
+	else if (!m_gameOver)
 	{
 		MoveCloth(deltaTime);
 	}
-
+	if (m_numParticlesSpawned % 20 == 0 && InputSystem::instance->IsKeyDown('W'))
+	{
+		m_cloth->ResetForces(true);
+		m_cloth->AddForce(new ConstantWindForce(GetPseudoRandomNoise1D(m_numParticlesSpawned) * 3000.0f, Vector3(MathUtils::GetRandom(-1.0f, 1.0f), MathUtils::GetRandom(-1.0f, 1.0f), MathUtils::GetRandom(-1.0f, 1.0f))));
+	}
 	m_cloth->Update(deltaTime);
 
 	float timeForNextParticle = GetPseudoRandomNoise1D(m_numParticlesSpawned / 10);
-	timeForNextParticle = MathUtils::RangeMap(timeForNextParticle, 0.0f, 1.0f, 0.0f, 2.0f);
+	timeForNextParticle = MathUtils::RangeMap(timeForNextParticle, 0.0f, 1.0f, 0.0f, 0.5f);
 	if (m_timeSinceLastParticle > timeForNextParticle)
 	{
 		const Vector3 BASE_VELOCITY = -Vector3::UNIT_Y * 10.0f;
 		Vector3 velocity = BASE_VELOCITY;
-		velocity += (Vector3::UNIT_X * MathUtils::GetRandom(-1.5f, 1.5f));
-		velocity += (Vector3::UNIT_Z * MathUtils::GetRandom(-0.7f, 0.7f));
+		velocity += (Vector3::UNIT_X * MathUtils::GetRandom(-2.0f, 2.0f));
+		velocity += (Vector3::UNIT_Z * MathUtils::GetRandom(-1.5f, 1.5f));
 		m_projectiles.push_back(Projectile(1.0f, 0.5f, LinearDynamicsState(Vector3(144, 100, 96), velocity)));
 		m_timeSinceLastParticle = 0.0f;
 		m_numParticlesSpawned += 1;
@@ -130,6 +138,13 @@ void TheGame::Update(float deltaTime)
 		AudioSystem::instance->PlaySound(m_hurtSounds[MathUtils::GetRandom(0, 5)]);
 	}
 	m_projectiles.erase(std::remove_if(m_projectiles.begin(), m_projectiles.end(), [](Projectile& bullet) {return (bullet.m_collided || (GetCurrentTimeSeconds() - bullet.m_birthday) > 15.0f); }), m_projectiles.end());
+	if (!m_gameOver && (m_cloth->IsDead() || m_cloth->GetPercentageConstraintsLeft() < 0.90f))
+	{
+		AudioSystem::instance->PlaySound(m_deathSFX);
+		m_cloth->RemoveAllConstraints();
+		m_cloth->AddForce(new GravityForce(100.0f));
+		m_gameOver = true;
+	}
 }
 
 //-----------------------------------------------------------------------------------
@@ -151,6 +166,17 @@ void TheGame::Render() const
 
 	DebugRenderer::instance->Render();
 	Console::instance->Render();
+	TheRenderer::instance->SetOrtho(Vector2(0.0f, 0.0f), Vector2(1600.0f, 900.0f));
+	//TheRenderer::instance->DrawTexturedAABB(AABB2(Vector2(0.0f, 0.0f), Vector2(1600.0f, 900.0f)), Vector2(1.0f, 1.0f), Vector2(0.0f, 0.0f), TheRenderer::instance->m_defaultTexture, RGBA(1.0f, 0.0f, 0.0f, 0.5f - ((m_cloth->GetPercentageConstraintsLeft() - 0.90f) / 0.20f)));
+	if (m_gameOver)
+	{
+		TheRenderer::instance->DrawTexturedAABB(AABB2(Vector2(0.0f, 0.0f), Vector2(1600.0f, 900.0f)), Vector2(1.0f, 1.0f), Vector2(0.0f, 0.0f), TheRenderer::instance->m_defaultTexture, RGBA(1.0f, 0.0f, 0.0f, 0.5f));
+		TheRenderer::instance->DrawText2D(Vector2(250.0f, 300.0f), "Great Job.", 10.0f, RGBA::WHITE, true, BitmapFont::CreateOrGetFontFromGlyphSheet("runescape"));
+	}
+	else
+	{
+		TheRenderer::instance->DrawTexturedAABB(AABB2(Vector2(0.0f, 0.0f), Vector2(1600.0f, 900.0f)), Vector2(1.0f, 1.0f), Vector2(0.0f, 0.0f), TheRenderer::instance->m_defaultTexture, RGBA(1.0f, 0.0f, 0.0f, 0.5f - ((m_cloth->GetPercentageConstraintsLeft() - 0.90f) / 0.20f)));
+	}
 	Vector3 position = m_camera->m_position;
 	EulerAngles orientation = m_camera->m_orientation;
 	//DebuggerPrintf("Camera Pos: (%f, %f, %f)   Camera Orientation: (%f, %f, %f)\n", position.x, position.y, position.z, orientation.rollDegreesAboutX, orientation.pitchDegreesAboutY, orientation.yawDegreesAboutZ);
